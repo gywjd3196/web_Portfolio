@@ -1,0 +1,11 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "portfolio-dev",
+      "runtimeExecutable": "node",
+      "runtimeArgs": ["C:/Users/wlsl9/AppData/Local/Temp/claude/C--Users-wlsl9-OneDrive-web-Portfolio/16422e47-1124-47fa-b2ad-31049e6e13e4/scratchpad/server.js"],
+      "port": 4321
+    }
+  ]
+}

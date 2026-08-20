@@ -1,0 +1,222 @@
+/* =========================================================
+   安曉貞 — Portfolio / HOME
+   기준 아트보드 : 1920 x 1080
+   모든 수치는 피그마 좌표를 그대로 쓰고 --u 로 비례 축소/확대
+   ========================================================= */
+
+/* ---------- 폰트 ----------
+   딱 두 가지만 씁니다.
+     영문 · 숫자 → Lunchtype25   (assets/fonts 의 로컬 파일)
+     한글        → Proxima Nova Hangeul (Adobe Fonts 킷 rgb1grk, index.html 참고)
+   ※ 한자(安曉貞)는 Proxima Nova Hangeul 에 글리프가 없어 Noto Sans KR 로 넘어갑니다. */
+@font-face{
+  font-family:'Lunchtype25';
+  src:url('../fonts/Lunchtype25-Regular_Condensed.ttf') format('truetype');
+  font-weight:400; font-style:normal; font-display:swap;
+}
+@font-face{
+  font-family:'Lunchtype25';
+  src:url('../fonts/Lunchtype25-Medium-Condensed.ttf') format('truetype');
+  font-weight:500; font-style:normal; font-display:swap;
+}
+@font-face{
+  font-family:'Lunchtype25';
+  src:url('../fonts/Lunchtype25-Light_Condensed.ttf') format('truetype');
+  font-weight:300; font-style:normal; font-display:swap;
+}
+/* Proxima Nova Hangeul 은 Adobe Fonts(Typekit, kit rgb1grk)로 불러옵니다.
+   → index.html <head> 의 Typekit 스크립트 참고. CSS 패밀리명 : proxima-nova-hangeul */
+
+:root{
+  /* 1920x1080 기준 1px = 1u (창 비율에 맞춰 축소) */
+  --u: min(calc(100vw / 1920), calc(100vh / 1080));
+
+  --paper:#FFFFFF;
+  --ink:#000000;
+  --line:#B6B6B6;
+  --reveal:#FF13EB;          /* 이미지 대체 색상 */
+
+  --font-en:'Lunchtype25','Helvetica Neue',Arial,sans-serif;              /* 영문 · 숫자 */
+  --font-kr:'proxima-nova-hangeul','Noto Sans KR','Malgun Gothic',sans-serif;  /* 한글 (+한자 대체) */
+}
+
+*{margin:0;padding:0;box-sizing:border-box;}
+html,body{height:100%;}
+body{
+  background:var(--paper);
+  color:var(--ink);
+  overflow:hidden;
+  -webkit-font-smoothing:antialiased;
+  text-rendering:optimizeLegibility;
+}
+
+/* ---------- 무대 ---------- */
+.stage{
+  position:fixed; inset:0;
+  overflow:hidden;
+  touch-action:none;
+  user-select:none; -webkit-user-select:none;
+  cursor:default;
+}
+.stage.is-pulling{cursor:grabbing;}
+
+/* 블라인드 뒤쪽(이미지) 레이어 */
+.reveal{
+  position:absolute; inset:0;
+  background-color:var(--reveal);
+  background-image:var(--reveal-img,none);
+  background-size:cover;
+  background-position:center;
+}
+
+/* 라인 박스 */
+.blind{position:absolute; inset:0; width:100%; height:100%; display:block;}
+
+/* 텍스트 레이어 */
+.content{position:absolute; inset:0; pointer-events:none;}
+
+/* ---------- 한자 / 한글 ---------- */
+.name{
+  position:absolute;
+  left:calc(50 * var(--u));
+  top:calc(65.6 * var(--u));
+  display:flex;
+  gap:calc(5 * var(--u));
+  pointer-events:auto;
+  cursor:default;
+}
+.name__cell{
+  display:block;
+  width:calc(70 * var(--u));
+  height:calc(84 * var(--u));
+  overflow:hidden;
+}
+.name__flip{
+  display:block;
+  transform:translateY(0);
+  transition:transform .34s cubic-bezier(.2,.85,.25,1.06);
+}
+.name__face{
+  display:flex; align-items:center; justify-content:center;
+  width:100%; height:calc(84 * var(--u));
+  font-family:var(--font-kr);
+  font-weight:400;
+  font-size:calc(70 * var(--u));
+  line-height:1;
+}
+.name:hover .name__flip{transform:translateY(calc(-84 * var(--u)));}
+/* 글자 하나씩 리듬감 있게 (빠르게) */
+.name__cell:nth-child(1) .name__flip{transition-delay:0s;}
+.name__cell:nth-child(2) .name__flip{transition-delay:.055s;}
+.name__cell:nth-child(3) .name__flip{transition-delay:.11s;}
+
+/* ---------- 문장 ---------- */
+.tagline{
+  position:absolute;
+  left:calc(50 * var(--u));
+  top:calc(217.8 * var(--u));
+  font-family:var(--font-en);
+  font-weight:400;
+  font-size:calc(100 * var(--u));
+  line-height:calc(99 * var(--u));
+  letter-spacing:-.025em;   /* 피그마 텍스트 폭(404)에 맞춘 자간 */
+}
+
+/* ---------- 메뉴 ---------- */
+.menu{
+  position:absolute;
+  top:calc(66 * var(--u));
+  right:calc(49 * var(--u));
+  width:calc(195 * var(--u));
+  text-align:right;
+  pointer-events:none;
+}
+.menu.is-open{pointer-events:auto;}
+.menu__slot{
+  height:calc(83 * var(--u));
+  overflow:hidden;
+}
+.menu__word{
+  display:block;
+  font-family:var(--font-en);
+  font-weight:400;
+  font-size:calc(70 * var(--u));
+  line-height:calc(83 * var(--u));
+  letter-spacing:-.025em;
+  margin-right:-.025em;
+  color:var(--ink);
+  text-decoration:none;
+  transform:translateY(-100%);
+  transition:transform .24s cubic-bezier(.22,.9,.24,1);
+  pointer-events:auto;
+}
+.menu__slot--label .menu__word{transform:none; cursor:default;}
+.menu.is-open .menu__word{transform:translateY(0);}
+
+/* 열릴 때 : 위 → 아래 순서 */
+.menu.is-open .menu__slot:nth-child(2) .menu__word{transition-delay:.02s;}
+.menu.is-open .menu__slot:nth-child(3) .menu__word{transition-delay:.07s;}
+.menu.is-open .menu__slot:nth-child(4) .menu__word{transition-delay:.12s;}
+.menu.is-open .menu__slot:nth-child(5) .menu__word{transition-delay:.17s;}
+/* 닫힐 때 : 아래 → 위 순서 */
+.menu__slot:nth-child(2) .menu__word{transition-delay:.15s;}
+.menu__slot:nth-child(3) .menu__word{transition-delay:.10s;}
+.menu__slot:nth-child(4) .menu__word{transition-delay:.05s;}
+.menu__slot:nth-child(5) .menu__word{transition-delay:0s;}
+
+/* ---------- TOUCH IT ---------- */
+.touch{
+  position:absolute;
+  left:50%;
+  top:50%;
+  transform:translate(-50%,calc(-50% + 11.5 * var(--u)));
+  display:flex;
+  align-items:flex-end;
+  font-family:var(--font-en);
+  font-weight:400;
+  font-size:calc(70 * var(--u));
+  line-height:.7;          /* 캡 높이 기준 박스 (피그마 49/70) */
+  letter-spacing:-.025em;
+  white-space:pre;
+}
+.touch__l{
+  display:inline-block;
+  position:relative;
+  will-change:transform;
+}
+.touch__dot{
+  position:absolute;
+  left:50%;
+  top:calc(-23 * var(--u));   /* 글자 위 9px 띄움 */
+  width:calc(14 * var(--u));
+  height:calc(14 * var(--u));
+  margin-left:calc(-7 * var(--u));
+  border-radius:50%;
+  background:var(--ink);
+}
+
+/* ---------- 플로팅 버튼 ---------- */
+.fab{
+  position:absolute;
+  right:calc(50 * var(--u));
+  bottom:calc(71 * var(--u));
+  width:calc(154 * var(--u));
+  height:calc(154 * var(--u));
+  border:0; border-radius:50%;
+  background:var(--ink);
+  display:flex; align-items:center; justify-content:center;
+  pointer-events:auto;
+  cursor:pointer;
+  transition:transform .25s cubic-bezier(.2,.9,.2,1);
+}
+.fab:hover{transform:scale(1.06);}
+.fab:active{transform:scale(.96);}
+.fab svg{
+  width:calc(68 * var(--u));
+  height:calc(67 * var(--u));
+  display:block;
+}
+
+@media (prefers-reduced-motion:reduce){
+  *{transition-duration:.01ms !important;}
+}
