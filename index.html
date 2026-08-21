@@ -3,12 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>安曉貞 — Portfolio</title>
-
-<!-- 한자(安曉貞) 전용 대체 폰트. Proxima Nova Hangeul 에는 한자 글리프가 없어서 이것만 남겨둡니다. -->
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500&display=swap" rel="stylesheet">
+<title>Ahn HyoJeoung — Portfolio</title>
 
 <link rel="stylesheet" href="assets/css/home.css">
 
@@ -40,29 +35,7 @@
   <!-- 3. 고정 텍스트 레이어 -->
   <div class="content">
 
-    <!-- 한자 → 한글 호버 -->
-    <h1 class="name no-drag" id="name" aria-label="안효정">
-      <span class="name__cell">
-        <span class="name__flip">
-          <span class="name__face">安</span>
-          <span class="name__face">안</span>
-        </span>
-      </span>
-      <span class="name__cell">
-        <span class="name__flip">
-          <span class="name__face">曉</span>
-          <span class="name__face">효</span>
-        </span>
-      </span>
-      <span class="name__cell">
-        <span class="name__flip">
-          <span class="name__face">貞</span>
-          <span class="name__face">정</span>
-        </span>
-      </span>
-    </h1>
-
-    <p class="tagline">Designing<br>one layer<br>deeper than<br>the obvious.</p>
+    <h1 class="tagline">Designing<br>one layer<br>deeper than<br>the obvious.</h1>
 
     <!-- 메뉴 호버 -->
     <nav class="menu no-drag" id="menu">
@@ -73,31 +46,173 @@
       <div class="menu__slot"><a class="menu__word" href="#" data-link="linkedin">Linkedin</a></div>
     </nav>
 
-    <!-- 물결 모션 -->
-    <div class="touch" id="touch" aria-label="Touch it">
-      <span class="touch__l">T</span>
-      <span class="touch__l">O</span>
-      <span class="touch__l">U</span>
-      <span class="touch__l">C</span>
-      <span class="touch__l">H</span>
-      <span class="touch__l touch__l--space">&nbsp;</span>
-      <span class="touch__l">I</span>
-      <span class="touch__l touch__l--last">T<i class="touch__dot"></i></span>
-    </div>
-
     <!-- 블라인드 플로팅 버튼 -->
     <button class="fab no-drag" id="fab" type="button" aria-label="블라인드 열기">
-      <svg viewBox="0 0 68 67" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
-        <rect x="0" y="0" width="68" height="20" rx="4" fill="#fff"/>
-        <path d="M0 31H68M0 42H68M0 53H68" stroke="#fff" stroke-width="2.6" stroke-linecap="round"/>
-        <path d="M50 19.5V47.5" stroke="#fff" stroke-width="2.6"/>
-        <circle cx="50" cy="57" r="8.8" fill="none" stroke="#fff" stroke-width="2.6"/>
+      <svg viewBox="0 0 154 154" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+        <circle cx="77" cy="77" r="77" fill="black"/>
+        <path d="M93 63.5L93 91.5" stroke="white" stroke-width="2"/>
+        <rect x="44" y="45" width="66" height="18" stroke="white" stroke-width="2"/>
+        <path d="M43 75H111" stroke="white" stroke-width="2"/>
+        <path d="M43 86H111" stroke="white" stroke-width="2"/>
+        <path d="M43 97H111" stroke="white" stroke-width="2"/>
+        <circle cx="93" cy="101" r="9" fill="black" stroke="white" stroke-width="2"/>
       </svg>
     </button>
 
   </div>
 </main>
 
+<!-- ============ WORK 화면 (피그마 21-30) ============
+     홈과 같은 문서 안의 오버레이 레이어. 메뉴의 Work 클릭 → is-open 으로 열림.
+     썸네일은 기본 채도 0, 카드 호버 시 컬러 이미지(work_hover N)로 크로스페이드 + 살짝 확대 -->
+<section class="work" id="work" aria-hidden="true">
+
+  <!-- 아트보드(1920u) 프레임 — 와이드 뷰포트에서 콘텐츠 가로 중앙 정렬 (home.css .work__frame) -->
+  <div class="work__frame">
+
+    <h2 class="work__label work__label--work">Work</h2>
+
+    <!-- 워크 메뉴 호버 — 홈 .menu 구조·CSS 그대로 재사용. Menu 라벨 클릭 시 홈으로 복귀 -->
+    <nav class="menu no-drag" id="workMenu">
+      <div class="menu__slot menu__slot--label"><a class="menu__word" href="#" data-link="home">Menu</a></div>
+      <div class="menu__slot"><a class="menu__word" href="#" data-link="work">Work</a></div>
+      <div class="menu__slot"><a class="menu__word" href="#" data-link="about">About</a></div>
+      <div class="menu__slot"><a class="menu__word" href="#" data-link="email">Email</a></div>
+      <div class="menu__slot"><a class="menu__word" href="#" data-link="linkedin">Linkedin</a></div>
+    </nav>
+
+    <!-- 상/하 가로 괘선 + 세로 구분선 3개 -->
+    <div class="work__rule work__rule--top" aria-hidden="true"></div>
+    <div class="work__rule work__rule--bottom" aria-hidden="true"></div>
+    <div class="work__vline work__vline--1" aria-hidden="true"></div>
+    <div class="work__vline work__vline--2" aria-hidden="true"></div>
+    <div class="work__vline work__vline--3" aria-hidden="true"></div>
+
+    <!-- 1단 : NHN Data (클라이언트 줄이 있어 타이틀 아래 간격만 103) -->
+    <article class="project project--1" data-pdf="assets/Portfolio/에이스카운터.pdf" data-title="ACE Counter - design intern">
+      <h3 class="project__title project__title--tight">흩어진 유입 접점을 하나의 전환 흐름으로<br>연결한 에이스카운터 온라인 유입 경험 설계</h3>
+      <p class="project__client">NHN DATA</p>
+      <div class="project__meta">
+        <span class="project__who">
+          <span class="project__badge" aria-hidden="true">W</span>
+          <span class="project__role">Design Intern</span>
+        </span>
+        <time class="project__date">26.09.03</time>
+      </div>
+      <span class="project__thumbwrap">
+        <img class="project__thumb" src="assets/img/work%201.png" alt="에이스카운터 웹 화면이 띄워진 모니터 목업">
+        <img class="project__thumb project__thumb--hover" src="assets/img/work_hover%201.png" alt="" aria-hidden="true">
+      </span>
+    </article>
+
+    <!-- 2단 : 신한장학재단 -->
+    <article class="project project--2" data-pdf="assets/Portfolio/푸른 솔.pdf" data-title="Blue Sol - projects">
+      <h3 class="project__title">단절된 장학생 네트워크를 연결·성장시키는<br>신한장학재단 개선 프로젝트</h3>
+      <div class="project__meta">
+        <span class="project__who">
+          <span class="project__badge" aria-hidden="true">W</span>
+          <span class="project__role">Projects</span>
+        </span>
+        <time class="project__date">26.02.12</time>
+      </div>
+      <span class="project__thumbwrap">
+        <img class="project__thumb" src="assets/img/work%202.png" alt="신한장학재단 모바일 앱 화면 목업">
+        <img class="project__thumb project__thumb--hover" src="assets/img/work_hover%202.png" alt="" aria-hidden="true">
+      </span>
+    </article>
+
+    <!-- 3단 : 혈당 헬스케어 -->
+    <article class="project project--3" data-pdf="assets/Portfolio/제로랩.pdf" data-title="Zero Lab - projects">
+      <h3 class="project__title">혈당 데이터 기반 개인 맞춤<br>헬스케어 UX/UI 모바일 앱 프로젝트</h3>
+      <div class="project__meta">
+        <span class="project__who">
+          <span class="project__badge" aria-hidden="true">W</span>
+          <span class="project__role">Projects</span>
+        </span>
+        <time class="project__date">25.10.21</time>
+      </div>
+      <span class="project__thumbwrap">
+        <img class="project__thumb" src="assets/img/work%203.png" alt="혈당 헬스케어 앱을 든 손 목업">
+        <img class="project__thumb project__thumb--hover" src="assets/img/work_hover%203.png" alt="" aria-hidden="true">
+      </span>
+    </article>
+
+    <!-- 4단 : AI 숏폼 아카이빙 -->
+    <article class="project project--4" data-pdf="assets/Portfolio/씨닛.pdf" data-title="Seenit - projects">
+      <h3 class="project__title">AI 기반 숏폼 콘텐츠 검색 및<br>아카이빙 UX/UI 모바일 앱 프로젝트</h3>
+      <div class="project__meta">
+        <span class="project__who">
+          <span class="project__badge" aria-hidden="true">W</span>
+          <span class="project__role">Projects</span>
+        </span>
+        <time class="project__date">25.06.13</time>
+      </div>
+      <span class="project__thumbwrap">
+        <img class="project__thumb" src="assets/img/work%204.png" alt="숏폼 아카이빙 앱 화면 목업 두 개">
+        <img class="project__thumb project__thumb--hover" src="assets/img/work_hover%204.png" alt="" aria-hidden="true">
+      </span>
+    </article>
+
+  </div>
+
+</section>
+
+<!-- ============ WORK-DETAILS 화면 (피그마 21-97) ============
+     그리드 카드 클릭 → 왼쪽 밖에서 밀려 들어오는 상세 오버레이.
+     타이틀·PDF 는 카드의 data-title / data-pdf 로 채우고,
+     오른쪽 425 카드는 클릭된 .project 를 복제해 슬롯에 넣는다 (home.js) -->
+<section class="detail" id="detail" aria-hidden="true">
+
+  <div class="work__frame">
+
+    <!-- 왼쪽 뷰어 : 상단 검정 바 (아래/위 화살표 = 한 장씩 스크롤, 확대 = 전체 화면 토글) -->
+    <div class="detail__bar">
+      <span class="detail__arrows">
+        <button class="detail__nav" id="detailDown" type="button" aria-label="다음 장으로 스크롤">
+          <svg viewBox="0 0 49 49" xmlns="http://www.w3.org/2000/svg" fill="none" stroke="#FFFFFF" stroke-width="2" aria-hidden="true">
+            <path d="M24.5 6V41M9 26.5 24.5 42 40 26.5"/>
+          </svg>
+        </button>
+        <button class="detail__nav" id="detailUp" type="button" aria-label="이전 장으로 스크롤">
+          <svg viewBox="0 0 49 49" xmlns="http://www.w3.org/2000/svg" fill="none" stroke="#FFFFFF" stroke-width="2" aria-hidden="true">
+            <path d="M24.5 43V8M9 22.5 24.5 7 40 22.5"/>
+          </svg>
+        </button>
+        <!-- 확대(돋보기+) : PDF 전체 화면 — ESC 로 복귀 -->
+        <button class="detail__zoom" id="detailZoom" type="button" aria-label="PDF 전체 화면으로 확대">
+          <svg viewBox="0 0 49 49" xmlns="http://www.w3.org/2000/svg" fill="none" stroke="#FFFFFF" stroke-width="2" aria-hidden="true">
+            <circle cx="21.5" cy="21.5" r="13.5"/>
+            <path d="M31.5 31.5 42 42M15.5 21.5H27.5M21.5 15.5V27.5"/>
+          </svg>
+        </button>
+      </span>
+      <h2 class="detail__title" id="detailTitle"></h2>
+      <button class="detail__close" id="detailClose" type="button" aria-label="상세 닫기">
+        <svg viewBox="0 0 48 48" xmlns="http://www.w3.org/2000/svg" fill="none" stroke="#FFFFFF" stroke-width="2" aria-hidden="true">
+          <path d="M7 7 41 41M41 7 7 41"/>
+        </svg>
+      </button>
+    </div>
+
+    <!-- PDF 뷰어 (배경 연회색) — pdf.js 가 페이지를 캔버스로 그려 넣는 스크롤 컨테이너 -->
+    <div class="detail__pdfarea">
+      <div class="detail__pdf" id="detailPdf" role="region" aria-label="프로젝트 상세 PDF"></div>
+    </div>
+
+    <!-- 세로 구분선 + 오른쪽 카드 상/하 괘선 -->
+    <div class="detail__vline" aria-hidden="true"></div>
+    <div class="detail__rule detail__rule--top" aria-hidden="true"></div>
+    <div class="detail__rule detail__rule--bottom" aria-hidden="true"></div>
+
+    <!-- 오른쪽 425 카드 슬롯 — 클릭된 .project 의 복제본이 들어온다 -->
+    <div id="detailCard"></div>
+
+  </div>
+
+</section>
+
+<!-- pdf.js (Mozilla, 로컬 벤더) — 브라우저 내장 뷰어로는 스크롤 제어가 불가능해 직접 렌더 -->
+<script src="assets/vendor/pdf.min.js"></script>
 <script src="assets/js/home.js"></script>
 </body>
 </html>
