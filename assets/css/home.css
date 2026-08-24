@@ -27,15 +27,19 @@
    → index.html <head> 의 Typekit 스크립트 참고. CSS 패밀리명 : proxima-nova-hangeul */
 
 :root{
-  /* 1920x1080 기준 1px = 1u (창 비율에 맞춰 축소) */
-  --u: min(calc(100vw / 1920), calc(100vh / 1080));
-  /* work 4단 전용 단위 — 단 폭 425→330 축소에 맞춰 단 내부 모듈 전체를 비례 축소 */
-  --cu: calc(var(--u) * 330 / 425);
+  /* 2축 스케일 : 가로는 1920 기준(--u), 세로는 1080 기준(--uy)
+     x축·폰트·글리프 관련 수치 → --u, 오버레이 y축 좌표 → --uy.
+     16:9 에선 둘이 같고, 세로가 짧은 화면(노트북)에선 세로만 비례 압축된다 */
+  --u: calc(100vw / 1920);
+  --uy: calc(100vh / 1080);
+  /* 카드 단 전용 단위 — 단 폭이 피그마 원본 425 그대로라 --u 와 동일 */
+  --cu: var(--u);
 
   --paper:#FFFFFF;
   --ink:#000000;
   --line:#B6B6B6;
-  --reveal:#FF13EB;          /* 이미지 대체 색상 */
+  --reveal:#FF13EB;          /* 이미지 로딩 전 폴백 색상 */
+  --reveal-img:url('../img/home_배경.png');   /* 블라인드 안쪽 배경 (2752x1536, cover) */
 
   --font-en:'Lunchtype25','Helvetica Neue',Arial,sans-serif;              /* 영문 · 숫자 */
   --font-kr:'proxima-nova-hangeul','Malgun Gothic',sans-serif;  /* 한글 */
@@ -73,6 +77,41 @@ body{
 /* 라인 박스 */
 .blind{position:absolute; inset:0; width:100%; height:100%; display:block;}
 
+/* ---------- 명함 ----------
+   피그마 홈(1920 기준) 픽셀 측정값 : 표시 582 x 321 (원본 1294x713 의 0.45배), 회전 -50°,
+   중심 (1270, 190). 4번째 블라인드 경계선(216 = 20vh) 위는 .card-mask 의 clip-path 로 잘라
+   좌하단 모서리만 삐죽 나온다 — 정확한 clip 값은 home.js 가 슬랫 높이에서 매 프레임 계산.
+   z-순서 : 블라인드 SVG 위, .content(태그라인·메뉴·fab) 아래 (DOM 순서) */
+.card-mask{
+  position:absolute; inset:0;
+  clip-path:inset(20vh 0 0 0);
+  perspective:calc(1400 * var(--u));   /* 낙하 중 rotateX 뒤집기 원근 */
+  pointer-events:none;                 /* 빈 영역은 블라인드 당김으로 통과 */
+}
+.card{
+  position:absolute;
+  width:calc(582 * var(--u));
+  height:calc(321 * var(--u));
+  left:calc(979 * var(--u));                              /* 1270 - 582/2 */
+  top:calc(190 * var(--uy) - 160.5 * var(--u));           /* 190  - 321/2 */
+  /* home.js 가 --cx/--cy/--rz/--rx 만 갱신 — 기본 회전값은 여기 한 곳 */
+  transform:translate(var(--cx,0px), var(--cy,0px)) rotate(calc(-50deg + var(--rz,0deg))) rotateX(var(--rx,0deg));
+  transform-style:preserve-3d;
+  pointer-events:auto;
+  cursor:grab;
+}
+.stage.is-pulling .card{cursor:grabbing;}
+.card__face{
+  position:absolute; inset:0;
+  width:100%; height:100%; display:block;
+  backface-visibility:hidden; -webkit-backface-visibility:hidden;
+  /* 피그마 x0 y4 blur15 20% — 회전·낙하 중에도 명함 모양을 따라가도록 면마다 drop-shadow
+     (부모에 filter 를 걸면 preserve-3d 가 평탄화된다) */
+  filter:drop-shadow(0 4px 15px rgba(0,0,0,.2));
+  -webkit-user-drag:none; user-select:none;
+}
+.card__face--front{transform:rotateX(180deg);}   /* 긴 축 기준으로 뒤집혔을 때 보이는 앞면 */
+
 /* 텍스트 레이어 */
 /* 아트보드(1920u) 프레임 — 뷰포트가 16:9 보다 넓어도 left/right 좌표가 한 프레임 기준으로 정렬되도록 가로 중앙 고정 */
 .content{
@@ -102,13 +141,14 @@ body{
 /* ---------- 메뉴 ---------- */
 .menu{
   position:absolute;
-  /* 피그마 캡박스 y=110 → 라인박스(83, 폰트70) 환산: 베이스라인 159가 162 라인 위에 얹힘
-     right 240 = 1440 컨테이너 우측 끝 */
-  top:calc(102 * var(--u));
-  right:calc(240 * var(--u));
+  /* work 화면과 동일 좌표 — 피그마 캡박스 y=137 → 라인박스(83, 폰트70) 환산 top 129,
+     텍스트 오른쪽 끝 1873 → right 47. 홈·오버레이 공통 */
+  top:calc(129 * var(--uy));
+  right:calc(47 * var(--u));
   width:calc(195 * var(--u));
   text-align:right;
   pointer-events:none;
+  z-index:20;      /* 열린 메뉴 하단 슬롯이 오버레이 괘선·카드 위에 오도록 (호버 유지) */
 }
 .menu.is-open{pointer-events:auto;}
 
@@ -138,17 +178,19 @@ body{
 .menu.is-open .menu__slot:nth-child(3) .menu__word{transition-delay:.07s;}
 .menu.is-open .menu__slot:nth-child(4) .menu__word{transition-delay:.12s;}
 .menu.is-open .menu__slot:nth-child(5) .menu__word{transition-delay:.17s;}
-/* 닫힐 때 : 아래 → 위 순서 */
-.menu__slot:nth-child(2) .menu__word{transition-delay:.15s;}
-.menu__slot:nth-child(3) .menu__word{transition-delay:.10s;}
-.menu__slot:nth-child(4) .menu__word{transition-delay:.05s;}
-.menu__slot:nth-child(5) .menu__word{transition-delay:0s;}
+.menu.is-open .menu__slot:nth-child(6) .menu__word{transition-delay:.22s;}
+/* 닫힐 때 : 아래 → 위 순서 — 끝에서부터 세어 5칸(홈)·6칸(상세) 메뉴 공용 */
+.menu__slot:nth-last-child(5) .menu__word{transition-delay:.20s;}
+.menu__slot:nth-last-child(4) .menu__word{transition-delay:.15s;}
+.menu__slot:nth-last-child(3) .menu__word{transition-delay:.10s;}
+.menu__slot:nth-last-child(2) .menu__word{transition-delay:.05s;}
+.menu__slot:nth-last-child(1) .menu__word{transition-delay:0s;}
 
 /* ---------- 플로팅 버튼 ---------- */
 .fab{
   position:absolute;
-  right:calc(240 * var(--u));
-  bottom:calc(71 * var(--u));
+  right:calc(47 * var(--u));           /* 메뉴와 같은 오른쪽 여백 */
+  bottom:calc(71 * var(--uy));
   width:calc(154 * var(--u));
   height:calc(154 * var(--u));
   border:0; border-radius:50%;
@@ -168,8 +210,17 @@ body{
 /* =========================================================
    WORK 화면 (피그마 21-30 · work-main)
    홈과 같은 문서의 오버레이 레이어 — 메뉴 Work 클릭 시 is-open.
-   모든 수치는 피그마 좌표 그대로 --u 비례.
+   좌우 여백 50 / 컨텐츠 1820, 모든 수치는 피그마 좌표 그대로 --u 비례.
    ========================================================= */
+/* 오버레이 공통 — --u(가로)·--uy(세로) 전역 단위를 그대로 사용.
+   y축 좌표는 --uy 라 세로가 짧은 화면에서도 스크롤 없이 전부 보인다.
+   overflow-y:auto 는 안전망 */
+.work,
+.about,
+.detail{
+  overflow-y:auto;
+  overflow-x:hidden;
+}
 .work{
   position:fixed; inset:0;
   z-index:10;                          /* 홈(.stage) 위를 덮는다 */
@@ -178,6 +229,15 @@ body{
   display:none;
 }
 .work.is-open{display:block;}
+
+/* ---------- ABOUT 화면 : 콘텐츠 제작 전, 메뉴만 있는 빈 오버레이 ---------- */
+.about{
+  position:fixed; inset:0;
+  z-index:11;                          /* 워크 위에도 덮인다 */
+  background:var(--paper);
+  display:none;
+}
+.about.is-open{display:block;}
 
 /* work 콘텐츠용 아트보드 프레임 — .content 와 동일 원리 */
 .work__frame{
@@ -198,10 +258,11 @@ body{
   text-box-edge:cap alphabetic;
 }
 
-/* 좌상단 Work (70) — 우상단 메뉴는 홈 .menu 구조·CSS 를 그대로 재사용 (index.html #workMenu) */
+/* 좌상단 Work (70) — 우상단 메뉴는 홈 .menu 구조·CSS 를 그대로 재사용 (index.html #workMenu)
+   피그마 캡박스 y=137 → 라인박스(83, 폰트70) 환산 top 129 (홈 '캡 110 → top 102' 보정과 동일) */
 .work__label{
   position:absolute;
-  top:calc(102 * var(--u));
+  top:calc(129 * var(--uy));
   font-family:var(--font-en);
   font-weight:400;
   font-size:calc(70 * var(--u));
@@ -210,47 +271,49 @@ body{
   color:var(--ink);
   white-space:nowrap;
 }
-.work__label--work{left:calc(240 * var(--u));}     /* 1440 컨테이너 좌측 끝 */
+.work__label--work{left:calc(49 * var(--u));}      /* 피그마 캡박스 x=49 */
 
-/* 워크 메뉴의 Menu 라벨은 홈과 달리 클릭(홈 복귀) 대상 */
-.work .menu__slot--label .menu__word{cursor:pointer;}
+/* 오버레이 메뉴 좌표는 홈 .menu(top 129 / right 47)와 동일 — 별도 오버라이드 불필요 */
 
-/* 괘선 */
+/* 괘선 (x=50, w=1820 — 좌우 여백 50) */
 .work__rule{
   position:absolute;
-  left:calc(240 * var(--u));
-  width:calc(1440 * var(--u));
+  left:calc(50 * var(--u));
+  width:calc(1820 * var(--u));
   height:calc(2 * var(--u));
   background:var(--ink);
 }
-.work__rule--top{top:calc(413 * var(--u));}
-.work__rule--bottom{top:calc(891 * var(--u));}
+.work__rule--top{top:calc(414 * var(--uy));}
+.work__rule--bottom{top:calc(1008.6 * var(--uy));}
 
 .work__vline{
   position:absolute;
-  top:calc(445.9 * var(--u));
-  height:calc(414 * var(--u));
+  top:calc(445.9 * var(--uy));
+  height:calc(530.6 * var(--uy));
   width:calc(2 * var(--u));
   background:var(--ink);
 }
-/* 4단(폭 330, 거터 40) 사이 거터 중앙 */
-.work__vline--1{left:calc(589 * var(--u));}        /* 1–2단 거터 중앙 590 */
-.work__vline--2{left:calc(959 * var(--u));}        /* 2–3단 거터 중앙 960 */
-.work__vline--3{left:calc(1329 * var(--u));}       /* 3–4단 거터 중앙 1330 */
+/* 4단(폭 425, 거터 40) 사이 거터 중앙 */
+.work__vline--1{left:calc(495 * var(--u));}        /* 1–2단 거터 중앙 (475~515) */
+.work__vline--2{left:calc(960 * var(--u));}        /* 2–3단 거터 중앙 (940~980) */
+.work__vline--3{left:calc(1425 * var(--u));}       /* 3–4단 거터 중앙 (1405~1445) */
 
-/* ---------- 프로젝트 4단 ---------- */
+/* ---------- 프로젝트 4단 ----------
+   카드 내부는 피그마 y 오프셋(카드 top 448 기준) 절대배치.
+   플로우+마진 혼합이면 --u 기반 텍스트 높이(--uy 와 축이 다름)가 아래 요소를
+   밀어내 세로 압축 화면에서 썸네일 윗단이 어긋난다 — 고정 오프셋으로
+   4개 카드 썸네일 정렬 + 하단 괘선(1008.6)과의 31.6 간격 유지 */
 .project{
   position:absolute;
-  top:calc(448 * var(--u));
-  width:calc(330 * var(--u));
-  display:flex;
-  flex-direction:column;
+  top:calc(448 * var(--uy));
+  width:calc(425 * var(--u));
+  height:calc(529 * var(--uy));        /* 카드 끝 977 − top 448 */
 }
 .work .project{cursor:pointer;}                    /* 그리드 카드 클릭 → work-details */
-.project--1{left:calc(240 * var(--u));}            /* 1440 컨테이너 좌측 끝 */
-.project--2{left:calc(610 * var(--u));}            /* 240 + (330 + 40) */
-.project--3{left:calc(980 * var(--u));}            /* 240 + (330 + 40) × 2 */
-.project--4{left:calc(1350 * var(--u));}           /* 240 + (330 + 40) × 3, 우측 끝 1680 */
+.project--1{left:calc(50 * var(--u));}             /* 1820 컨테이너 좌측 끝 */
+.project--2{left:calc(515 * var(--u));}            /* 50 + (425 + 40) */
+.project--3{left:calc(980 * var(--u));}            /* 50 + (425 + 40) × 2 */
+.project--4{left:calc(1445 * var(--u));}           /* 50 + (425 + 40) × 3, 우측 끝 1870 */
 
 /* 두 줄 한글 타이틀 (Proxima Nova Hangeul 24 / 41)
    ※ 모든 한글은 var(--font-kr) = proxima-nova-hangeul 을 쓴다.
@@ -259,6 +322,8 @@ body{
    ※ 킷은 허용된 도메인에서만 로드됨 — file:// 로 열면 맑은고딕 폴백으로 보인다.
       npx serve . 등 로컬 서버 + 킷 도메인 설정(localhost) 확인. */
 .project__title{
+  position:absolute;
+  top:0; left:0; right:0;              /* 피그마 448 = 카드 top */
   font-family:var(--font-kr);
   font-weight:500;
   font-size:calc(24 * var(--cu));
@@ -266,27 +331,30 @@ body{
   letter-spacing:-.03em;
   color:#121212;
   white-space:nowrap;
-  margin-bottom:calc(148 * var(--cu));
 }
-.project__title--tight{margin-bottom:calc(103 * var(--cu));}  /* 클라이언트 줄이 있는 1단 */
+/* .project__title--tight : 절대배치 전환으로 마진 분기 불필요 — 클래스는 HTML 에 남아 있음 */
 
 /* 클라이언트명 (1단 전용, 30 우측 정렬) */
 .project__client{
+  position:absolute;
+  top:calc(160 * var(--uy));           /* 피그마 608 − 카드 448 */
+  left:0; right:0;
   font-family:var(--font-en);
   font-weight:400;
   font-size:calc(30 * var(--cu));
   letter-spacing:-.03em;
   color:var(--ink);
   text-align:right;
-  margin-bottom:calc(24 * var(--cu));
 }
 
 /* 뱃지 + 롤 | 날짜 */
 .project__meta{
+  position:absolute;
+  top:calc(205 * var(--uy));           /* 피그마 653 − 카드 448 */
+  left:0; right:0;
   display:flex;
   align-items:center;
   justify-content:space-between;
-  margin-bottom:calc(19 * var(--cu));
 }
 .project__who{
   display:flex;
@@ -325,16 +393,17 @@ body{
 }
 
 /* 썸네일 (에셋 work 1~4.png / work_hover 1~4.png — 피그마 2x export 850x512)
-   단 폭 330 기준 높이 자동(약 198.8) — 원본 850x512(=425x256) 비율 유지
+   단 폭 425 기준 높이 256 — 원본 850x512(=425x256) 비율 유지
    기본은 채도 0(work N), 카드(.project) 호버 시 컬러 이미지(work_hover N)가
    크로스페이드로 나타나면서 두 레이어가 함께 살짝 확대(피그마 21-172).
    opacity/transform 만 애니메이션 — 원본 이미지 파일은 무수정 */
 .project__thumbwrap{
-  position:relative;
-  display:block;
+  position:absolute;
+  top:calc(273 * var(--uy));             /* 피그마 721 − 카드 448, 하단 977 = 카드 끝 */
+  left:0;
   width:100%;
-  aspect-ratio:425 / 256;
-  overflow:hidden;                       /* 확대분을 프레임 안에서 자름 */
+  height:calc(256 * var(--uy));          /* 16:9 에선 425/256 비율 그대로, 짧은 화면에선 세로 압축 */
+  overflow:hidden;                       /* 확대분·압축 시 크롭을 프레임 안에서 자름 */
 }
 .project__thumb{
   position:absolute;
@@ -359,14 +428,13 @@ body{
 /* =========================================================
    WORK-DETAILS 화면 (피그마 21-97 · work-details)
    그리드 카드 클릭 시 왼쪽 밖에서 밀려 들어오는 오버레이.
-   오른쪽 카드는 그리드 .project 모듈 그대로 — --cu 를 --u 로
-   재정의해 330 축소 모듈이 425 풀스케일로 커진다.
+   오른쪽 카드는 그리드 .project 모듈 그대로 — 그리드와 같은
+   425 풀스케일(--cu = --u, 오버레이 공통 규칙)로 복제된다.
    ========================================================= */
 .detail{
   position:fixed; inset:0;
   z-index:20;                          /* 워크(.work) 위를 덮는다 */
   background:var(--paper);
-  --cu:var(--u);                       /* .project 카드 425 풀스케일 */
   visibility:hidden;
   transform:translateX(-100%);
   /* 닫힘 : 왼쪽으로 밀려 나간 뒤(0.6s) visibility 를 끈다 */
@@ -384,13 +452,13 @@ body{
   position:absolute;
   left:0; top:0;
   width:calc(1403 * var(--u));
-  height:calc(132 * var(--u));
+  height:calc(132 * var(--uy));
   background:var(--ink);
 }
 .detail__arrows{
   position:absolute;
   left:calc(50 * var(--u));
-  top:calc(41 * var(--u));
+  top:calc(41 * var(--uy));
   display:flex;
   gap:calc(20 * var(--u));             /* 아이콘 사이 간격 — 피그마 미확인 임시값 */
 }
@@ -408,8 +476,8 @@ body{
 .detail__title{
   position:absolute;
   left:0;
-  top:calc(41 * var(--u));
-  width:100%;
+  top:calc(41 * var(--uy));
+  width:calc(1403 * var(--u));         /* 바 폭 기준 중앙 701.5 — 피그마 타이틀 박스(x471, w464) 중앙 703 */
   font-family:var(--font-en);
   font-weight:400;
   font-size:calc(35 * var(--u));
@@ -422,7 +490,7 @@ body{
 .detail__close{
   position:absolute;
   left:calc(1304.7 * var(--u));
-  top:calc(41.8 * var(--u));
+  top:calc(41.8 * var(--uy));
   width:calc(48 * var(--u));
   height:calc(48 * var(--u));
   background:none; border:0; padding:0;
@@ -430,24 +498,26 @@ body{
 }
 .detail__close svg{width:100%; height:100%; display:block;}
 
-/* PDF 영역 (바 아래 y132 ~ 화면 하단) */
+/* PDF 영역 (바 아래 y132 ~ 아트보드 하단 1080)
+   뷰포트가 아트보드보다 세로로 길면 min-height 로 화면 아래까지 채운다 */
 .detail__pdfarea{
   position:absolute;
-  left:0; top:calc(132 * var(--u));
+  left:0; top:calc(132 * var(--uy));
   width:calc(1403 * var(--u));
-  bottom:0;
+  height:calc(948 * var(--uy));
+  min-height:calc(100% - 132 * var(--uy));
   background:#E5E5E5;
 }
 .detail__pdf{
   position:absolute;
   left:calc(50 * var(--u));
-  top:calc(41.5 * var(--u));           /* 화면 y173.5 = 바 132 + 41.5 */
+  top:calc(41.5 * var(--uy));           /* 화면 y173.5 = 바 132 + 41.5 */
   width:calc(1303 * var(--u));
-  height:calc(100% - 41.5 * var(--u)); /* 화면 아래 끝까지 */
-  overflow-y:auto;                     /* 휠 스크롤 + 화살표 scrollBy 공용 */
+  height:calc(100% - 41.5 * var(--uy)); /* 화면 아래 끝까지 */
+  overflow-y:auto;                      /* 휠 스크롤 + 화살표 scrollBy 공용 */
   display:flex;
   flex-direction:column;
-  gap:calc(20 * var(--u));             /* 페이지 사이 간격 (피그마 21-122) */
+  gap:calc(20 * var(--uy));             /* 페이지 사이 간격 (피그마 21-122) */
 }
 /* pdf.js 가 그리는 페이지 캔버스 — 폭 100%, 렌더 전에는 aspect-ratio 로 자리만 잡는다 */
 .detail__page{
@@ -465,12 +535,18 @@ body{
 }
 
 /* 확대(전체 화면) 모드 — PDF 영역이 화면 전체를 덮고 스크롤 스냅으로 한 장씩 보인다.
-   .detail 의 transform 이 fixed 의 기준이 되므로 inset:0 = 뷰포트 전체 */
+   is-open 의 translateX(0) 도 fixed 의 컨테이닝 블록이 되므로 확대 중엔 transform
+   자체를 해제(이미 열린 상태라 슬라이드 전환 불필요) → fixed 기준이 확실히 뷰포트.
+   높이도 uy 기반(948)이면 세로 압축 화면에서 하단이 뚫리므로 100vh 로 강제 */
+.detail.is-zoom{transform:none;}
 .detail.is-zoom .detail__pdfarea{
   position:fixed; inset:0;
-  width:auto;
-  z-index:5;                           /* 바·카드 위를 덮는다 */
+  width:100vw; height:100vh;
+  min-height:0;
+  z-index:5;                           /* 카드·괘선 위를 덮는다 */
 }
+/* 확대 중에는 상단 바를 숨겨 PDF 만 전체 화면으로 — ESC 로 복귀 */
+.detail.is-zoom .detail__bar{display:none;}
 .detail.is-zoom .detail__pdf{
   left:0; top:0;
   width:100%; height:100%;
@@ -488,8 +564,8 @@ body{
 .detail__vline{
   position:absolute;
   left:calc(1425 * var(--u));
-  top:calc(445.9 * var(--u));
-  height:calc(530.6 * var(--u));
+  top:calc(445.9 * var(--uy));
+  height:calc(530.6 * var(--uy));
   width:calc(2 * var(--u));
   background:var(--ink);
 }
@@ -502,19 +578,271 @@ body{
   height:calc(2 * var(--u));
   background:var(--ink);
 }
-.detail__rule--top{top:calc(414 * var(--u));}
-.detail__rule--bottom{top:calc(1008.6 * var(--u));}
+.detail__rule--top{top:calc(414 * var(--uy));}
+.detail__rule--bottom{top:calc(1008.6 * var(--uy));}
 
 /* 복제해 온 .project 카드 — 그리드 위치를 425 풀스케일 자리로 재정의
    (.detail .project 가 .project--N 의 left 를 덮는다) */
 .detail .project{
   left:calc(1445.3 * var(--u));
-  top:calc(446 * var(--u));
+  top:calc(446 * var(--uy));
   width:calc(425 * var(--u));
   cursor:default;
 }
 /* 상세 카드 썸네일은 호버와 무관하게 항상 컬러 이미지 */
 .detail .project__thumb--hover{opacity:1;}
+
+/* =========================================================
+   좁은 세로형 화면 (≤900px) — work 4단 그리드를 1열 세로 스택으로 전환.
+   카드 범위에서 --u 를 (콘텐츠 폭 1820u ÷ 425) 로 재정의해 425 기준
+   내부 수치가 카드 폭에 비례 확대된다. --uy 도 같은 값이라 카드 내부
+   절대배치 오프셋(uy)이 그대로 비율을 유지한다.
+   detail 화면은 이 브레이크포인트에서 그대로 둔다.
+   ========================================================= */
+@media (max-width:900px){
+  /* 프레임을 플로우 컨테이너로 — 카드 스택만큼 늘어나 .work 의 overflow-y 로 스크롤 */
+  .work .work__frame{
+    position:relative;
+    top:auto; bottom:auto; left:auto;
+    transform:none;
+    width:100%;
+    min-height:100%;
+    padding-top:calc(448 * var(--uy));      /* 그리드와 같은 첫 카드 시작 y */
+    padding-bottom:calc(100 * var(--uy));
+  }
+  /* 세로 구분선은 숨기고, 상/하 괘선과 Work 라벨·메뉴는 유지 */
+  .work .work__vline{display:none;}
+  /* 하단 괘선은 카드 스택 아래(프레임 바닥 쪽)로 */
+  .work .work__rule--bottom{top:auto; bottom:calc(50 * var(--uy));}
+  /* 카드 : 1열 스택 — 폭 1820u(좌우 여백 50u 유지), 내부 단위 카드 폭 기준 재정의 */
+  .work .project{
+    --u: calc(100vw * 1820 / 1920 / 425); /* 카드 폭 425 × --u = 1820 전역 u */
+    --uy: var(--u);
+    --cu: var(--u);
+    position:relative;
+    top:auto; left:auto;
+    margin:0 auto calc(40 * var(--u));    /* 카드 사이 간격 — 그리드 거터(40)와 동일 리듬 */
+  }
+  /* 라벨·메뉴 폰트가 너무 작아지지 않게 최소 크기 보정 (슬롯 높이도 함께) */
+  .work__label, .menu__word{
+    font-size:max(calc(70 * var(--u)), 20px);
+    line-height:max(calc(83 * var(--u)), 24px);
+  }
+  .menu__slot{height:max(calc(83 * var(--u)), 24px);}
+}
+
+/* =========================================================
+   ABOUT 화면 (피그마 62-446)
+   1920 아트보드 세로 3면(1080+1471+1080=3631) — 가로는 --u,
+   세로 좌표는 --uy(100vh/1080) 라서 설계상 한 면(1080)이 정확히
+   한 화면에 들어온다 (첫 화면 잘림 방지). .about__scroll 세로 스크롤.
+   좌표는 피그마 절대값 그대로 (2·3면은 1080/2551 오프셋 합산).
+   글리프에 묶인 값(폰트·라인하이트·자간·윗첨자 28)은 --u 유지.
+   ========================================================= */
+.about__scroll{
+  position:absolute; inset:0;
+  overflow-y:auto;
+}
+.about__frame{
+  position:relative;
+  left:50%; transform:translateX(-50%);
+  width:calc(1920 * var(--u));
+  height:calc(3631 * var(--uy));
+  color:var(--ink);
+}
+
+/* 공통 : 피그마 캡박스 좌표를 그대로 쓰기 위한 캡 트리밍 */
+.about__label, .about__sublabel, .about__headline, .about__lead,
+.about__kw, .about__num, .about__cat,
+.about__ctatitle, .about__ctasub, .about__contactitem{
+  text-box-trim:trim-both;
+  text-box-edge:cap alphabetic;
+}
+
+/* ── 1면 : 인트로 ── */
+.about__label{
+  position:absolute;
+  left:calc(49 * var(--u));
+  top:calc(137 * var(--uy));           /* 캡박스 y=137 */
+  font-family:var(--font-en);
+  font-weight:400;
+  font-size:calc(70 * var(--u));
+  line-height:calc(109 * var(--u));
+  letter-spacing:-.03em;
+  white-space:nowrap;
+}
+.about__photo{
+  position:absolute;
+  left:calc(49 * var(--u));
+  top:calc(364 * var(--uy));
+  width:calc(271 * var(--u));
+  height:calc(271 * var(--u));         /* 원본 1:1 정방형 — 세로 압축 안 함 */
+  background:#CBCBCB;
+  overflow:hidden;
+}
+.about__photo img{width:100%; height:100%; object-fit:cover; display:block;}
+
+.about__intro{
+  position:absolute;
+  left:calc(515 * var(--u));
+  top:calc(364 * var(--uy));
+  width:calc(1355 * var(--u));
+  padding-top:calc(80 * var(--uy));    /* 괘선(절대배치) ~ 헤드라인 간격 */
+  display:flex; flex-direction:column;
+  gap:calc(80 * var(--uy));
+}
+/* 괘선은 플로우에서 빼 절대배치 — 다른 라인들과 같은 기준으로 그려져 굵기가 통일된다 */
+.about__introline{position:absolute; top:0; left:0; width:100%; height:1px; background:var(--ink);}
+.about__headline{
+  font-family:var(--font-kr);
+  font-weight:500;
+  font-size:calc(80 * var(--u));
+  line-height:calc(113 * var(--u));
+  letter-spacing:-.03em;
+  color:#121212;
+  white-space:nowrap;
+}
+.about__lead{
+  font-family:var(--font-kr);
+  font-weight:400;
+  font-size:calc(24 * var(--u));
+  line-height:calc(39 * var(--u));
+  letter-spacing:-.03em;
+  color:#121212;
+  white-space:nowrap;
+}
+
+/* ── 2면 : 키워드 4행 ── */
+.about__sublabel{
+  position:absolute;
+  left:calc(50 * var(--u));
+  top:calc(1217 * var(--uy));          /* 1080 + 137 */
+  font-family:var(--font-en);
+  font-weight:400;
+  font-size:calc(50 * var(--u));
+  line-height:calc(62 * var(--u));
+  letter-spacing:-.03em;
+  white-space:nowrap;
+}
+.about__line{position:absolute; height:1px; background:var(--ink);}
+
+.about__row{
+  position:absolute;
+  display:flex; align-items:center;
+  white-space:nowrap;
+}
+/* 그룹 top = 피그마 그리드(윗첨자 숫자) top. 1080 + 행별 y */
+.about__row--1{left:calc(205  * var(--u)); top:calc(1444 * var(--uy)); gap:calc(24 * var(--u));}
+.about__row--2{left:calc(1042 * var(--u)); top:calc(1728 * var(--uy)); gap:calc(36 * var(--u));}
+.about__row--3{left:calc(545  * var(--u)); top:calc(2012 * var(--uy)); gap:calc(19 * var(--u));}
+.about__row--4{left:calc(708  * var(--u)); top:calc(2296 * var(--uy)); gap:calc(27 * var(--u));}
+
+/* 키워드 박스 폭 = 윗첨자 숫자 오른쪽 끝(ml + 18)까지 — 한글 라벨과의 간격이
+   피그마처럼 숫자 뒤에서 시작한다 (예: ROOT CAUSE 글자 444 + 숫자영역 = 475) */
+.about__row--1 .about__kw{width:calc(475 * var(--u));}
+.about__row--2 .about__kw{width:calc(415 * var(--u));}
+.about__row--3 .about__kw{width:calc(269 * var(--u));}
+.about__row--4 .about__kw{width:calc(375 * var(--u));}
+
+.about__kw{
+  position:relative;
+  display:block;
+  padding-top:calc(28 * var(--u));     /* 윗첨자 숫자가 캡 위로 28 올라간다 */
+  font-family:var(--font-en);
+  font-weight:400;
+  font-size:calc(100 * var(--u));
+  line-height:calc(62 * var(--u));
+  letter-spacing:-.03em;
+}
+.about__num{
+  position:absolute;
+  top:0;                               /* left 는 행별 인라인 값 (피그마 ml) */
+  font-family:var(--font-en);
+  font-weight:500;
+  font-size:calc(40 * var(--u));
+  line-height:calc(26 * var(--u));
+  letter-spacing:-.03em;
+}
+.about__cat{
+  font-family:var(--font-kr);
+  font-weight:400;
+  font-size:calc(32 * var(--u));
+  line-height:1;
+  letter-spacing:-.03em;
+  color:#121212;
+}
+
+/* 키워드 사진 — 에셋 PNG 가 박스 크기의 정확한 2배라 cover 로 그대로 채운다 */
+.about__img{position:absolute; background:#C2C2C2; overflow:hidden;}
+.about__img img{width:100%; height:100%; object-fit:cover; display:block;}
+.about__img--rc  {left:calc(1114 * var(--u)); top:calc(1416 * var(--uy)); width:calc(410 * var(--u)); height:calc(249 * var(--uy));}
+.about__img--sys {left:calc(205  * var(--u)); top:calc(1668 * var(--uy)); width:calc(293 * var(--u)); height:calc(314 * var(--uy));}
+.about__img--ship{left:calc(1290 * var(--u)); top:calc(2013 * var(--uy)); width:calc(580 * var(--u)); height:calc(191 * var(--uy));}
+.about__img--del {left:calc(410  * var(--u)); top:calc(2222 * var(--uy)); width:calc(270 * var(--u)); height:calc(137 * var(--uy));}
+
+/* ── 3면 : 커피챗 CTA ── */
+.about__cta{
+  position:absolute;
+  left:50%; transform:translateX(-50%);
+  top:calc(2898 * var(--uy));          /* 2551 + 347 */
+  width:calc(1135 * var(--u));
+  display:flex; flex-direction:column; align-items:center;
+  gap:calc(35 * var(--uy));
+}
+.about__ctatext{
+  display:flex; flex-direction:column;
+  gap:calc(70 * var(--uy));
+  width:100%;
+}
+.about__ctatitle{
+  font-family:var(--font-en);
+  font-weight:400;
+  font-size:calc(100 * var(--u));
+  line-height:calc(109 * var(--u));
+  letter-spacing:-.03em;
+  white-space:nowrap;
+}
+.about__ctasub{
+  font-family:var(--font-kr);
+  font-weight:400;
+  font-size:calc(32 * var(--u));
+  line-height:1;
+  letter-spacing:-.03em;
+  color:#121212;
+  text-align:center;
+}
+.about__cup{width:calc(190 * var(--u)); height:calc(190 * var(--u));}
+.about__cup img{width:100%; height:100%; object-fit:cover; display:block;}
+
+.about__contact{
+  position:absolute;
+  left:50%; transform:translateX(-50%);
+  top:calc(3451 * var(--uy));          /* 2551 + 900 */
+  display:flex; align-items:center;
+  gap:calc(60 * var(--u));
+  white-space:nowrap;
+}
+.about__contactitem{
+  font-family:var(--font-en);
+  font-weight:400;
+  font-size:calc(40 * var(--u));
+  line-height:calc(109 * var(--u));
+  letter-spacing:-.03em;
+  color:var(--ink);
+}
+a.about__contactitem{cursor:pointer;}
+.about__contactitem--u{text-decoration:underline; text-underline-position:from-font;}
+
+/* ---------- ABOUT 등장 모션 : 아래에서 위로 떠오르는 리빌 ----------
+   .fx 는 살짝 아래(+60)에서 투명하게 시작, 화면에 들어오면(.is-in, home.js
+   IntersectionObserver) 제자리로 떠오른다. --fxd 로 요소별 순차 지연 */
+.about .fx{
+  opacity:0;
+  transform:translateY(calc(60 * var(--uy)));
+  transition:opacity 1.1s ease-out var(--fxd, 0s),
+             transform 1.1s cubic-bezier(.16,1,.3,1) var(--fxd, 0s);
+}
+.about .fx.is-in{opacity:1; transform:none;}
 
 @media (prefers-reduced-motion:reduce){
   *{transition-duration:.01ms !important;}

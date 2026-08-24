@@ -43,6 +43,20 @@
 
   let wasPulling = false;
 
+  /* ---------------- 명함 ----------------
+     CSS rest 위치(끼임 자리) 기준 오프셋 x/y(px)·rz/rx(deg) 를 --cx/--cy/--rz/--rx 로 넘긴다.
+     state : rest(정지) → drag(잡고 끌기) → spring(끼임 자리로 복귀) | fall(낙하) → gone(화면 밖, 새로고침 전까지 유지) */
+  const cardMask = document.getElementById('cardMask');
+  const cardEl   = document.getElementById('card');
+  const CARD_ROW  = 4;                  // 명함이 끼어 있는 경계선 (4번째 줄 = 슬랫 3 의 아래 엣지)
+  const CARD_GAIN = 0.35;               // 명함을 끌 때 블라인드가 함께 당겨지는 비율
+  const CARD_K = 0.08, CARD_D = 0.70;   // 끼임 자리로 돌아가는 스프링 (놓았을 때 · 재장전)
+  const DROP_R = 0.13;                  // 뷰포트 높이의 13% 이상 끌어내리고 놓으면 떨어진다
+  const MOTION = window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 0.05 : 1;  // 감소 모션 : 낙하·재장전을 20배 빨리
+  const card = { state:'rest', x:0, y:0, rz:0, rx:0, vx:0, vy:0, vz:0,
+                 downX:0, downY:0, px:0, py:0, t0:0, x0:0, y0:0, z0:0, timer:null };
+  let wasCard = false, cardClip = '';
+
   const f    = n => Math.round(n * 1000) / 1000;
   const unit = () => Math.min(W / BASE_W, H / BASE_H);
   const easeInOut = k => k < .5 ? 4 * k * k * k : 1 - Math.pow(-2 * k + 2, 3) / 2;
@@ -57,6 +71,9 @@
     W = stage.clientWidth  || window.innerWidth  || BASE_W;
     H = stage.clientHeight || window.innerHeight || BASE_H;
     dpr = window.devicePixelRatio || 1;
+    /* 1 CSS px 는 dpr 디바이스 px — 배율(1.25 등)에 따라 스냅 위상별로 굵기가 달라 보이므로
+       1/dpr 로 잡아 어떤 배율에서도 정확히 1 디바이스 픽셀 굵기로 통일한다 */
+    gLines.setAttribute('stroke-width', 1 / dpr);
     svg.setAttribute('viewBox', '0 0 ' + W + ' ' + H);
 
     N = Math.max(4, Math.round(H / (ROW_H * unit())));
@@ -189,6 +206,7 @@
     const mode = pullActive ? 'geometricPrecision' : 'crispEdges';
     if (gLines.getAttribute('shape-rendering') !== mode) gLines.setAttribute('shape-rendering', mode);
 
+    let prevBotY = null;   // 앞 슬랫 아래 엣지선의 y (평평할 때만)
     for (let i = 0; i < N; i++) {
       const t  = i * pitch;
       const b  = t + slatH;
@@ -199,9 +217,18 @@
       const topPts = edgePts(t, at, anim.x, halfW);
       const botPts = edgePts(b, ab, anim.x, halfW);
       slats[i].setAttribute('d', slatD(topPts, botPts));
+      if (i === CARD_ROW - 1) setCardClip(botPts);   // 명함은 이 슬랫 아래 엣지 밑으로만 보인다
 
-      setLine(lineTop[i], topPts, t, at);
+      /* 닫힌 상태에선 슬랫 i 위 엣지선이 앞 슬랫 아래 엣지선과 같은 y 에 겹쳐
+         스트로크가 두 번 쌓여 굵어 보인다 — 평평한 선이 반 디바이스 픽셀 안에서
+         같은 자리면(float 오차 흡수) 하나만 남긴다 */
+      if (Math.abs(at) < FLAT && prevBotY !== null && Math.abs(t - prevBotY) < 0.5 / dpr) {
+        lineTop[i].removeAttribute('d');
+      } else {
+        setLine(lineTop[i], topPts, t, at);
+      }
       setLine(lineBot[i], botPts, b, ab);
+      prevBotY = Math.abs(ab) < FLAT ? b : null;
     }
   }
 
@@ -231,17 +258,100 @@
   });
 
   window.addEventListener('pointermove', e => {
-    if (press.active) { press.x = e.clientX; press.y = e.clientY; }
+    if (!press.active) return;
+    press.x = e.clientX;
+    if (card.state === 'drag') {
+      /* 명함 드래그 : 명함은 커서를 따라오고, 블라인드는 게인만큼만 약하게 따라온다 */
+      const dy = e.clientY - card.downY;
+      card.px = e.clientX - card.downX;
+      card.py = dy < 0 ? dy * 0.25 : dy;                               // 위로는 저항
+      press.y = tear.index * (H / N) + CARD_GAIN * Math.max(0, dy);
+    } else press.y = e.clientY;
   }, { passive:true });
 
   const release = () => {
     if (!press.active) return;
     press.active = false;
     stage.classList.remove('is-pulling');
+    if (card.state === 'drag') dropCard();
   };
   window.addEventListener('pointerup', release);
   window.addEventListener('pointercancel', release);
   window.addEventListener('blur', release);
+
+  /* ---------------- 명함 잡기 / 놓기 / 낙하 / 재장전 ---------------- */
+  cardEl.addEventListener('pointerdown', e => {
+    if (e.button !== 0 || card.state === 'fall' || card.state === 'gone') return;
+    card.state = 'drag';
+    card.downX = e.clientX - card.x;      // 복귀 중에 다시 잡아도 튀지 않게 현재 오프셋을 유지
+    card.downY = e.clientY - card.y;
+    card.px = card.x;
+    card.py = card.y;
+    /* 블라인드도 약하게 함께 당긴다 — 기존 당김 물리를 명함 끼임 경계(tear) 기준으로 재사용 */
+    tear.index = CARD_ROW;
+    press.active = true;
+    press.x = anim.x = e.clientX;
+    press.y = anim.y = tear.index * (H / N);
+    stage.classList.add('is-pulling');
+    try { cardEl.setPointerCapture(e.pointerId); } catch (_) {}
+  });
+
+  function dropCard() {
+    if (card.y < H * DROP_R) { card.state = 'spring'; return; }   // 임계 미만 : 스프링으로 끼임 자리 복귀
+    card.state = 'fall';
+    card.t0 = performance.now();
+    card.x0 = card.x; card.y0 = card.y; card.z0 = card.rz;
+  }
+
+  /* 슬랫 3 의 아래 엣지 곡선을 그대로 clip 폴리곤으로 — 당김으로 선이 휘어도 명함이 그 밑에서만 보인다 */
+  function setCardClip(pts) {
+    let s = 'polygon(';
+    for (let k = 0; k < pts.length; k += 2) s += f(pts[k]) + 'px ' + f(pts[k + 1] + OVERLAP) + 'px,';
+    s += W + 'px ' + 2 * H + 'px,0px ' + 2 * H + 'px)';
+    if (s !== cardClip) cardMask.style.clipPath = cardClip = s;
+  }
+
+  function stepCard(now) {
+    if (card.state === 'drag') {
+      /* 커서를 살짝 늦게 따라오고, 뒤처진 방향의 반대로 기운다 */
+      card.x += (card.px - card.x) * 0.35;
+      card.y += (card.py - card.y) * 0.35;
+      card.rz += (Math.max(-14, Math.min(14, (card.px - card.x) * 0.15)) - card.rz) * 0.2;
+    } else if (card.state === 'spring') {
+      card.vx += -card.x  * CARD_K; card.vx *= CARD_D; card.x  += card.vx;
+      card.vy += -card.y  * CARD_K; card.vy *= CARD_D; card.y  += card.vy;
+      card.vz += -card.rz * CARD_K; card.vz *= CARD_D; card.rz += card.vz;
+      if (Math.abs(card.x) + Math.abs(card.y) + Math.abs(card.rz) < 0.05 &&
+          Math.abs(card.vx) + Math.abs(card.vy) + Math.abs(card.vz) < 0.05) {
+        card.x = card.y = card.rz = card.vx = card.vy = card.vz = 0;
+        card.state = 'rest';
+      }
+    } else if (card.state === 'fall') {
+      /* 종이 낙하 : 중력으로 가속하다 종단 속도로 등속(≈2초에 화면 밖),
+         좌우 살랑임(sin) + 살랑임보다 1/4 주기 앞선 rotateZ 기울기,
+         긴 축 기준 rotateX 로 천천히 뒤집혀 앞면이 보였다가 다시 돈다 */
+      const t  = (now - card.t0) / 1000 / MOTION;
+      const G  = 0.5 * H, VT = 0.6 * H, tT = VT / G;
+      card.y  = card.y0 + (t < tT ? 0.5 * G * t * t : 0.5 * G * tT * tT + VT * (t - tT));
+      const ramp = Math.min(1, t / 0.5), w = 2 * Math.PI / 1.2 * t;
+      card.x  = card.x0 + W * 0.05 * Math.sin(w) * ramp;
+      card.rz = card.z0 * (1 - ramp) + 14 * Math.cos(w) * ramp;
+      card.rx = 200 * t;
+      /* 회전 바운딩까지 감안해 완전히 화면 밖으로 나간 뒤에만 종료.
+         한 번 떨어진 명함은 다시 끼우지 않는다 — 새로고침해야 리셋 (사용자 지정 동작) */
+      if (cardEl.getBoundingClientRect().top > H) {
+        card.state = 'gone';
+        cardMask.style.display = 'none';
+      }
+    }
+  }
+
+  function drawCard() {
+    cardEl.style.setProperty('--cx', f(card.x)  + 'px');
+    cardEl.style.setProperty('--cy', f(card.y)  + 'px');
+    cardEl.style.setProperty('--rz', f(card.rz) + 'deg');
+    cardEl.style.setProperty('--rx', f(card.rx) + 'deg');
+  }
 
   /* ---------------- 메뉴 호버 (홈 #menu · 워크 #workMenu 공통) ---------------- */
   document.querySelectorAll('.menu').forEach(m => {
@@ -258,23 +368,60 @@
   document.querySelectorAll('.menu a[data-link]').forEach(a => {
     a.addEventListener('click', e => {
       e.preventDefault();
-      const link = a.dataset.link;
-      if (link === 'home') {                       // 워크 메뉴의 Menu 라벨 → 홈 복귀
-        closeDetail();
-        openWork(false);
-      } else if (link === 'work') {
-        if (a.closest('#workMenu')) closeDetail(); // 워크에서는 detail 만 닫고 그리드 유지
-        else openWork(true);
-      }
-      // About / Email / Linkedin 은 이후 연결
+      const link = a.dataset.link;                 // Email / Linkedin 은 data-link 없이 실제 href 로 동작
+      closeDetail();
+      openWork(link === 'work');
+      openAbout(link === 'about');
     });
   });
 
-  /* ---------------- WORK 화면 열기/닫기 ---------------- */
-  const work = document.getElementById('work');
+  /* ---------------- WORK / ABOUT 화면 열기/닫기 ---------------- */
+  const work  = document.getElementById('work');
+  const about = document.getElementById('about');
   function openWork(on) {
     work.classList.toggle('is-open', on);
     work.setAttribute('aria-hidden', on ? 'false' : 'true');
+    if (on) preloadPdfs();                 // 첫 클릭 전에 PDF 파싱을 미리 끝내 둔다
+  }
+  function openAbout(on) {
+    about.classList.toggle('is-open', on);
+    about.setAttribute('aria-hidden', on ? 'false' : 'true');
+    /* display:none → block 직후라 레이아웃이 잡힌 다음 프레임에 처리 */
+    requestAnimationFrame(() => { snapAboutLines(); armAboutFx(on); });
+  }
+
+  /* ---------------- ABOUT 라인 1 디바이스 픽셀 스냅 ----------------
+     1px CSS 선이 소수 DPR(1.25 등)에서 위치에 따라 1~2 디바이스 픽셀로
+     달리 그려지는 것을 막는다 — 높이를 1 디바이스 픽셀로 두고
+     문서 기준 y 를 디바이스 픽셀 격자에 스냅 (블라인드 snapY 와 같은 원리) */
+  const aboutScroll = about.querySelector('.about__scroll');
+  function snapAboutLines() {
+    const frame = about.querySelector('.about__frame');
+    if (!frame || !about.classList.contains('is-open')) return;
+    const d  = window.devicePixelRatio || 1;
+    const f0 = frame.getBoundingClientRect().top;
+    about.querySelectorAll('.about__line, .about__introline').forEach(el => {
+      el.style.transform = '';
+      el.style.height    = (1 / d) + 'px';
+      const y = el.getBoundingClientRect().top - f0;
+      el.style.transform = 'translateY(' + (Math.round(y * d) / d - y) + 'px)';
+    });
+  }
+
+  /* ---------------- ABOUT 등장 모션 ----------------
+     .fx 요소가 화면에 들어오면 위→아래로 내려앉는 리빌 (CSS .fx.is-in).
+     닫으면 초기화해 다음 진입 때 다시 재생된다 */
+  let fxIO = null;
+  function armAboutFx(on) {
+    if (fxIO) { fxIO.disconnect(); fxIO = null; }
+    const els = about.querySelectorAll('.fx');
+    els.forEach(el => el.classList.remove('is-in'));
+    if (!on) return;
+    aboutScroll.scrollTop = 0;                       // 진입 시 항상 첫 화면부터
+    fxIO = new IntersectionObserver(es => es.forEach(en => {
+      if (en.isIntersecting) { fxIO.unobserve(en.target); en.target.classList.add('is-in'); }
+    }), { root: aboutScroll, threshold: 0.2 });
+    els.forEach(el => fxIO.observe(el));
   }
 
   /* ---------------- WORK-DETAILS 오버레이 ----------------
@@ -290,11 +437,44 @@
      URL 단위로 복원해 버려서, pdf.js 로 페이지를 캔버스에 직접 그린다.
      화면 근처에 온 페이지만 렌더(IntersectionObserver) — 20MB PDF 도 가볍게 */
   pdfjsLib.GlobalWorkerOptions.workerSrc = 'assets/vendor/pdf.worker.min.js';
-  let pdfTask = null, pdfIO = null;
+  let pdfTask = null, pdfIO = null, pdfRerender = null;
+
+  /* 문서 캐시 : url -> getDocument 태스크. 닫아도 destroy 하지 않고 남겨
+     같은 카드를 다시 열면 파싱 없이 즉시 뜬다.
+     Range(206) + disableAutoFetch 로 전체 다운로드 전에 첫 페이지부터 그린다.
+     ponytail: 캐시 무제한 — 포트폴리오 PDF 4개뿐. 수십 개로 늘면 LRU 로 교체 */
+  const pdfCache = new Map();
+  function getPdfTask(url) {
+    let t = pdfCache.get(url);
+    if (!t) {
+      t = pdfjsLib.getDocument({
+        url: encodeURI(url),
+        disableAutoFetch: true,          // 보이는 페이지 조각만 받는다
+        rangeChunkSize: 1 << 20          // 1MB — 10~21MB 파일에서 요청 수/선행량 균형
+      });
+      pdfCache.set(url, t);
+    }
+    return t;
+  }
+
+  /* work 화면이 열리면 4개 PDF 를 백그라운드에서 순차로 미리 파싱해 둔다.
+     카드 pointerenter 는 getPdfTask 를 바로 불러 해당 PDF 가 줄을 서지 않고
+     먼저 출발한다 (이미 시작된 건 캐시가 걸러 중복 시작 없음) */
+  let preloadStarted = false;
+  function preloadPdfs() {
+    if (preloadStarted || location.protocol === 'file:') return;
+    preloadStarted = true;
+    const urls = [...document.querySelectorAll('.work .project')]
+      .map(p => p.dataset.pdf).filter(Boolean);
+    (async () => {
+      for (const u of urls) { try { await getPdfTask(u).promise; } catch (_) { pdfCache.delete(u); } }
+    })();
+  }
 
   function clearPdf() {
-    if (pdfIO)   { pdfIO.disconnect(); pdfIO = null; }
-    if (pdfTask) { pdfTask.destroy();  pdfTask = null; }
+    if (pdfIO) { pdfIO.disconnect(); pdfIO = null; }
+    pdfTask = null;                      // 문서는 pdfCache 에 살아 있다 — destroy 금지
+    pdfRerender = null;
     detailPdf.textContent = '';
   }
 
@@ -308,23 +488,39 @@
       detailPdf.appendChild(p);
       return;
     }
-    const task = pdfjsLib.getDocument(encodeURI(url));
+    /* 파싱을 기다리는 동안 빈 화면 대신 로딩 표시 — 첫 페이지가 그려지면 제거 */
+    const notice = document.createElement('p');
+    notice.className = 'detail__notice';
+    notice.textContent = '불러오는 중…';
+    detailPdf.appendChild(notice);
+
+    const task = getPdfTask(url);
     pdfTask = task;
     let doc;
-    try { doc = await task.promise; } catch (_) { return; }   // destroy 되면 reject
+    try { doc = await task.promise; }
+    catch (_) { pdfCache.delete(url); notice.textContent = 'PDF를 불러오지 못했습니다.'; return; }
     if (pdfTask !== task) return;                             // 로드 중 다른 PDF 로 교체됨
 
+    /* 기본은 실제 표시 폭(뷰포트의 1303/1920) × DPR 로 렌더해 시간·메모리를 줄이고,
+       확대(is-zoom) 때만 뷰포트 전체 폭으로 재렌더한다 */
+    const renderW = () => window.innerWidth * (window.devicePixelRatio || 1)
+                        * (detail.classList.contains('is-zoom') ? 1 : 1303 / 1920);
     const renderPage = async canvas => {
+      const w = Math.round(renderW());
+      if (+canvas.dataset.w >= w) return;                     // 이미 충분한 해상도
+      canvas.dataset.w = w;
       const page = await doc.getPage(+canvas.dataset.page);
       if (pdfTask !== task) return;
-      /* 확대(전체 화면)에서도 선명하도록 뷰포트 가로 폭 × DPR 기준으로 렌더 */
-      const scale = window.innerWidth * (window.devicePixelRatio || 1)
-                  / page.getViewport({ scale:1 }).width;
-      const vp = page.getViewport({ scale });
+      const vp = page.getViewport({ scale: w / page.getViewport({ scale:1 }).width });
       canvas.width  = vp.width;
       canvas.height = vp.height;
-      page.render({ canvasContext: canvas.getContext('2d'), viewport: vp });
+      await page.render({ canvasContext: canvas.getContext('2d'), viewport: vp }).promise;
+      if (pdfTask === task) notice.remove();                  // 첫 캔버스가 그려졌다
     };
+    /* 확대 시 이미 그려진 캔버스만 고해상도로 다시 그린다 (축소해도 그대로 둔다)
+       ponytail: 고해상도 캔버스를 유지해 메모리를 더 쓴다 — 문제 되면 축소 시 다운렌더 추가 */
+    pdfRerender = () => detailPdf.querySelectorAll('canvas[data-w]').forEach(c => renderPage(c));
+
     pdfIO = new IntersectionObserver(entries => entries.forEach(en => {
       if (en.isIntersecting) { pdfIO.unobserve(en.target); renderPage(en.target); }
     }), { root: detailPdf, rootMargin: '150% 0%' });          // 두 화면쯤 앞서 미리 그린다
@@ -337,7 +533,8 @@
       c.dataset.page = i;
       c.style.aspectRatio = v1.width + ' / ' + v1.height;     // 렌더 전 자리 확보
       detailPdf.appendChild(c);
-      pdfIO.observe(c);
+      if (i <= 2) renderPage(c);                              // 첫 두 장은 IO 를 기다리지 않는다
+      else pdfIO.observe(c);
     }
     detailPdf.scrollTop = 0;                                  // 항상 첫 장부터
   }
@@ -368,9 +565,13 @@
   /* 확대 : PDF 전체 화면 토글 (ESC 로 해제) — 캔버스는 그대로, CSS 만 전환 */
   function setZoom(on) {
     detail.classList.toggle('is-zoom', on);
+    if (on && pdfRerender) pdfRerender();   // 확대 폭에 맞춰 고해상도 재렌더
   }
   document.getElementById('detailZoom').addEventListener('click', () => setZoom(true));
   document.querySelectorAll('.work .project').forEach(p => {
+    p.addEventListener('pointerenter', () => {   // 호버한 카드의 PDF 를 우선 파싱
+      if (location.protocol !== 'file:' && p.dataset.pdf) getPdfTask(p.dataset.pdf);
+    });
     p.addEventListener('click', () => openDetail(p));
   });
   document.getElementById('detailClose').addEventListener('click', closeDetail);
@@ -413,6 +614,12 @@
     anim.x += (press.x - anim.x) * 0.34;
     anim.y += (press.y - anim.y) * 0.34;
 
+    /* 명함 — 움직이는 동안만 스타일을 쓴다 (정지 후 한 프레임 더) */
+    stepCard(now);
+    const cardMoving = card.state !== 'rest';
+    if (cardMoving || wasCard) drawCard();
+    wasCard = cardMoving;
+
     /* 블라인드 */
     let blindMoving = false;
     if (blind.open !== blind.to) {
@@ -435,7 +642,7 @@
   }
   window.addEventListener('resize', () => {
     clearTimeout(rt);
-    rt = setTimeout(build, 120);
+    rt = setTimeout(() => { build(); snapAboutLines(); }, 120);
   });
 
   build();

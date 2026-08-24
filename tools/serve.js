@@ -12,10 +12,30 @@ const server = http.createServer((req, res) => {
   const rel = decodeURIComponent(req.url.split('?')[0]).replace(/^\/+/, '') || 'index.html';
   const p = path.join(ROOT, rel);
   if (!p.startsWith(ROOT)) { res.writeHead(403); res.end(); return; }  // 상위 경로 차단
-  fs.readFile(p, (err, data) => {
-    if (err) { res.writeHead(404); res.end('not found'); return; }
-    res.writeHead(200, { 'Content-Type': MIME[path.extname(p).toLowerCase()] || 'application/octet-stream' });
-    res.end(data);
+  fs.stat(p, (err, st) => {
+    if (err || !st.isFile()) { res.writeHead(404); res.end('not found'); return; }
+    const type = MIME[path.extname(p).toLowerCase()] || 'application/octet-stream';
+
+    /* Range(206) 지원 — pdf.js 가 20MB PDF 전체를 받기 전에 필요한 조각만
+       가져와 첫 페이지를 그릴 수 있다.
+       ponytail: 단일 범위만 처리 — 다중 범위(bytes=a-b,c-d)는 200 전체 응답으로 폴백 */
+    const m = /^bytes=(\d*)-(\d*)$/.exec(req.headers.range || '');
+    if (m && (m[1] || m[2])) {
+      const start = m[1] ? +m[1] : Math.max(0, st.size - +m[2]);          // 'bytes=-N' 은 꼬리 N바이트
+      const end   = m[1] && m[2] ? Math.min(+m[2], st.size - 1) : st.size - 1;
+      if (start >= st.size || start > end) {
+        res.writeHead(416, { 'Content-Range': 'bytes */' + st.size }); res.end(); return;
+      }
+      res.writeHead(206, {
+        'Content-Type': type, 'Accept-Ranges': 'bytes',
+        'Content-Range': 'bytes ' + start + '-' + end + '/' + st.size,
+        'Content-Length': end - start + 1
+      });
+      fs.createReadStream(p, { start, end }).pipe(res);
+      return;
+    }
+    res.writeHead(200, { 'Content-Type': type, 'Accept-Ranges': 'bytes', 'Content-Length': st.size });
+    fs.createReadStream(p).pipe(res);
   });
 });
 server.on('error', e => {
