@@ -243,7 +243,7 @@
   fab.addEventListener('click', () => {
     clearTimeout(blind.timer);
     tweenBlind(1, 420);                                        // 열림 (빠르게)
-    blind.timer = setTimeout(() => tweenBlind(0, 420), 3000);  // 3초 뒤 닫힘
+    blind.timer = setTimeout(() => tweenBlind(0, 340), 2200);  // 2.2초 뒤 닫힘
   });
 
   /* ---------------- 꾹 눌러 잡아당기기 ---------------- */
