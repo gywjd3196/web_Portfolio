@@ -23,8 +23,10 @@
 
 <main class="stage" id="stage">
 
-  <!-- 1. 블라인드 뒤에 보이는 레이어 (이미지 자리 - 지금은 색상으로 대체) -->
-  <div class="reveal" id="reveal"></div>
+  <!-- 1. 블라인드 뒤에 보이는 레이어 (배경 이미지 + 인사 문구, 인터랙션 없음) -->
+  <div class="reveal" id="reveal">
+    <p class="reveal__greeting" aria-hidden="true">Welcome to my website!<br>Please take your time looking around.<br>You are always welcome to contact us.</p>
+  </div>
 
   <!-- 2. 직사각형 라인 박스(블라인드) : JS 가 그림 -->
   <svg class="blind" id="blind" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="none" aria-hidden="true">
