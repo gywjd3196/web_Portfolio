@@ -400,7 +400,8 @@
     if (!frame || !about.classList.contains('is-open')) return;
     const d  = window.devicePixelRatio || 1;
     const f0 = frame.getBoundingClientRect().top;
-    about.querySelectorAll('.about__line, .about__introline').forEach(el => {
+    // .about__introline 은 세로선(피그마 79-53)이라 가로선 높이 스냅에서 제외
+    about.querySelectorAll('.about__line').forEach(el => {
       el.style.transform = '';
       el.style.height    = (1 / d) + 'px';
       const y = el.getBoundingClientRect().top - f0;

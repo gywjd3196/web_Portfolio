@@ -710,22 +710,24 @@ body{
 }
 .about__photo img{width:100%; height:100%; object-fit:cover; display:block;}
 
+/* 피그마 79-53 : 사진(49) ─60─ 세로선(x 380, h 487) ─60─ 텍스트 블록(x 440, w 1005)
+   그룹 내부 간격·높이는 사진(271u)과 같은 --u 기준 — 세로 압축 화면에서도 세로선이 텍스트 높이를 따라간다 */
 .about__intro{
   position:absolute;
-  left:calc(515 * var(--u));
+  left:calc(440 * var(--u));
   top:calc(364 * var(--uy));
-  width:calc(1355 * var(--u));
-  padding-top:calc(80 * var(--uy));    /* 괘선(절대배치) ~ 헤드라인 간격 */
+  width:calc(1005 * var(--u));
+  padding-top:calc(15 * var(--u));     /* 헤드라인 프레임 상단 패딩 15 */
   display:flex; flex-direction:column;
-  gap:calc(80 * var(--uy));
+  gap:calc(88 * var(--u));             /* 헤드라인 하단 패딩 15 + 프레임 간격 73 → lead 캡 y 342 */
 }
-/* 괘선은 플로우에서 빼 절대배치 — 다른 라인들과 같은 기준으로 그려져 굵기가 통일된다 */
-.about__introline{position:absolute; top:0; left:0; width:100%; height:1px; background:var(--ink);}
+/* 세로 구분선 — 사진과 텍스트 사이 (x 380 = 블록 좌측 −60), 세로 487 / 1px */
+.about__introline{position:absolute; top:0; left:calc(-60 * var(--u)); width:1px; height:calc(487 * var(--u)); background:var(--ink);}
 .about__headline{
   font-family:var(--font-kr);
   font-weight:500;
-  font-size:calc(80 * var(--u));
-  line-height:calc(113 * var(--u));
+  font-size:calc(70 * var(--u));
+  line-height:calc(96 * var(--u));
   letter-spacing:-.03em;
   color:#121212;
   white-space:nowrap;
