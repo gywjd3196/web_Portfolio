@@ -188,6 +188,14 @@ body{
   pointer-events:auto;
 }
 .menu__slot--label .menu__word{transform:none; cursor:default;}
+
+/* 워크·어바웃 오버레이에서는 메뉴 글자 뒤에 흰 바탕을 깐다 — 메뉴를 내렸을 때
+   아래 콘텐츠(제목·괘선)와 글자가 겹쳐 읽히지 않는 문제 해결.
+   바탕을 .menu__slot 이 아니라 .menu__word 에 거는 이유 : 슬롯의 overflow:hidden
+   안에서 글자와 함께 슬라이드해, 여닫는 0.24초 동안에도 바탕이 글자보다 먼저
+   나타나거나 늦게 사라지지 않는다. 홈 #menu 는 블라인드 위라 그대로 둔다. */
+#workMenu .menu__word,
+#aboutMenu .menu__word{background:var(--paper);}
 .menu.is-open .menu__word{transform:translateY(0);}
 
 /* 열릴 때 : 위 → 아래 순서 */

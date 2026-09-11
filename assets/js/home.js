@@ -39,6 +39,8 @@
   const tear  = { index:0 };                       // 당길 때 벌어지는 경계선
   const slatS = [], slatV = [];                    // 슬랫별 당김 스프링 (값 / 속도)
   let   pullActive = false;                        // 당김 애니메이션이 진행 중인지
+  const KICK_Y = 0.07, KICK_MS = 260;              // 명함 낙하 때 블라인드를 튕기는 깊이(뷰포트 비율)·유지 시간
+  let   kickT0 = 0;                                // 튕김 시작 시각 (0 이면 튕김 아님)
   const blind = { open:0, from:0, to:0, t0:0, dur:1, timer:null };
 
   let wasPulling = false;
@@ -53,8 +55,11 @@
   const CARD_K = 0.08, CARD_D = 0.70;   // 끼임 자리로 돌아가는 스프링 (놓았을 때 · 재장전)
   const DROP_R = 0.13;                  // 뷰포트 높이의 13% 이상 끌어내리고 놓으면 떨어진다
   const MOTION = window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 0.05 : 1;  // 감소 모션 : 낙하·재장전을 20배 빨리
+  const BOB_A = MOTION < 1 ? 0 : 7;      // 끼임 자리에서 위아래로 살랑이는 폭 (기준 1920x1080 px)
+  const BOB_T = 2200;                   // 살랑임 한 주기 (ms)
   const card = { state:'rest', x:0, y:0, rz:0, rx:0, vx:0, vy:0, vz:0,
-                 downX:0, downY:0, px:0, py:0, t0:0, x0:0, y0:0, z0:0, timer:null };
+                 downX:0, downY:0, px:0, py:0, t0:0, x0:0, y0:0, z0:0, timer:null,
+                 bobT0:0, downC:0, dragged:false };
   let wasCard = false, cardClip = '';
 
   const f    = n => Math.round(n * 1000) / 1000;
@@ -249,6 +254,7 @@
   /* ---------------- 꾹 눌러 잡아당기기 ---------------- */
   stage.addEventListener('pointerdown', e => {
     if (e.button !== 0 || e.target.closest('.no-drag')) return;
+    kickT0 = 0;
     press.active = true;
     press.x = anim.x = e.clientX;
     press.y = anim.y = e.clientY;
@@ -263,6 +269,7 @@
     if (card.state === 'drag') {
       /* 명함 드래그 : 명함은 커서를 따라오고, 블라인드는 게인만큼만 약하게 따라온다 */
       const dy = e.clientY - card.downY;
+      if (Math.abs(e.clientY - card.downC) > 8) card.dragged = true;
       card.px = e.clientX - card.downX;
       card.py = dy < 0 ? dy * 0.25 : dy;                               // 위로는 저항
       press.y = tear.index * (H / N) + CARD_GAIN * Math.max(0, dy);
@@ -283,6 +290,8 @@
   cardEl.addEventListener('pointerdown', e => {
     if (e.button !== 0 || card.state === 'fall' || card.state === 'gone') return;
     card.state = 'drag';
+    card.dragged = false;                 // 실제로 끌어내렸는지 (아니면 그냥 클릭)
+    card.downC = e.clientY;
     card.downX = e.clientX - card.x;      // 복귀 중에 다시 잡아도 튀지 않게 현재 오프셋을 유지
     card.downY = e.clientY - card.y;
     card.px = card.x;
@@ -297,10 +306,23 @@
   });
 
   function dropCard() {
-    if (card.y < H * DROP_R) { card.state = 'spring'; return; }   // 임계 미만 : 스프링으로 끼임 자리 복귀
+    /* 끌어내린 경우에만 임계를 따진다 — 그냥 한 번 누르면(클릭) 바로 떨어뜨린다 */
+    if (card.dragged && card.y < H * DROP_R) { card.state = 'spring'; return; }
+    if (!card.dragged) kickBlind();   // 끌어서 떨어뜨릴 땐 이미 블라인드가 따라 내려와 있다
     card.state = 'fall';
     card.t0 = performance.now();
     card.x0 = card.x; card.y0 = card.y; card.z0 = card.rz;
+  }
+
+  /* 명함이 떨어지는 순간 블라인드를 아래로 한 번 튕긴다 : 명함 끼임 경계에서 잠깐
+     당겼다 놓는 것과 같아, 슬랫이 벌어지며 안쪽 배경이 보였다가 출렁이며 닫힌다.
+     처음 온 사람에게 '커서로 블라인드를 움직일 수 있다'는 걸 알려 주는 신호. */
+  function kickBlind() {
+    tear.index = CARD_ROW;
+    anim.y  = tear.index * (H / N);
+    press.y = anim.y + H * KICK_Y;
+    press.active = true;
+    kickT0 = performance.now();
   }
 
   /* 슬랫 3 의 아래 엣지 곡선을 그대로 clip 폴리곤으로 — 당김으로 선이 휘어도 명함이 그 밑에서만 보인다 */
@@ -312,7 +334,12 @@
   }
 
   function stepCard(now) {
-    if (card.state === 'drag') {
+    if (card.state === 'rest') {
+      /* 끼임 자리에서 천천히 위아래로 — '눌러 보라'는 신호.
+         한 번 떨어뜨리면 state 가 gone 이라 여기 오지 않는다 (명함 없는 기본 화면) */
+      if (!card.bobT0) card.bobT0 = now;
+      card.y = BOB_A * unit() * Math.sin(2 * Math.PI * (now - card.bobT0) / BOB_T);
+    } else if (card.state === 'drag') {
       /* 커서를 살짝 늦게 따라오고, 뒤처진 방향의 반대로 기운다 */
       card.x += (card.px - card.x) * 0.35;
       card.y += (card.py - card.y) * 0.35;
@@ -325,6 +352,7 @@
           Math.abs(card.vx) + Math.abs(card.vy) + Math.abs(card.vz) < 0.05) {
         card.x = card.y = card.rz = card.vx = card.vy = card.vz = 0;
         card.state = 'rest';
+        card.bobT0 = now;                 // 살랑임을 0 에서 다시 시작
       }
     } else if (card.state === 'fall') {
       /* 종이 낙하 : 중력으로 가속하다 종단 속도로 등속(≈2초에 화면 밖),
@@ -597,6 +625,8 @@
     /* 당김 : 슬랫별 스프링 — 잡은 경계에서 먼 슬랫일수록 늦게 따라와
        천이 순서대로 끌려오는 전파 지연이 생기고, 놓으면 무른 스프링으로
        바뀌어 오버슈트하며 출렁이다가(감쇠 진동) 제자리로 돌아간다 */
+    if (kickT0 && now - kickT0 > KICK_MS * MOTION) { kickT0 = 0; press.active = false; }
+
     const target = press.active ? 1 : 0;
     const down   = anim.y >= tear.index * (H / N);
     pullActive   = press.active;
@@ -617,7 +647,7 @@
 
     /* 명함 — 움직이는 동안만 스타일을 쓴다 (정지 후 한 프레임 더) */
     stepCard(now);
-    const cardMoving = card.state !== 'rest';
+    const cardMoving = card.state !== 'gone' && (BOB_A > 0 || card.state !== 'rest');
     if (cardMoving || wasCard) drawCard();
     wasCard = cardMoving;
 
