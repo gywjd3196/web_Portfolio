@@ -3,8 +3,8 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Ahn HyoJeoung — One Layer Deeper</title>
-<meta name="description" content="Product / UXUI Designer 안효정 — 화면을 다시 그리기 전에, 사용자가 멈춘 지점을 먼저 찾습니다.">
+<title>Diagnostic Report — Ahn HyoJeoung, Product / UXUI Designer</title>
+<meta name="description" content="Product / UXUI Designer 안효정의 진단 리포트 — 화면을 다시 그리기 전에, 사용자가 멈춘 지점을 먼저 찾습니다.">
 <link rel="stylesheet" href="v2.css">
 <!-- 한글 : Proxima Nova Hangeul (Adobe Fonts 킷 rgb1grk) — 루트 index.html 과 같은 킷 -->
 <script>
@@ -16,155 +16,196 @@
 </head>
 <body class="is-loading">
 
-<!-- ============ 0. 프리로더 — 줄무늬 블라인드가 걷히며 시작 (ref: Siena, KODE) ============ -->
+<!-- ============ 0. 접수 — 스캔 라인이 내려가며 리포트를 인쇄 (ref: KODE 스크램블·카운터, Siena 인트로) ============ -->
 <div class="loader" aria-hidden="true">
-  <div class="loader__stripes"></div>
+  <div class="loader__scan"></div>
   <div class="loader__mark">
+    <p class="loader__tag">INTAKE — CASE No. 2026-AHJ</p>
     <span class="loader__name" data-scramble>AHN HYOJEOUNG</span>
-    <span class="loader__count">000</span>
+    <p class="loader__row"><span>SCANNING PRODUCT</span><b class="loader__count">000%</b></p>
+    <i class="barcode" data-barcode="AHJ2026"></i>
   </div>
 </div>
 
-<!-- ============ 고정 UI ============ -->
+<!-- ============ 리포트 헤더 ============ -->
 <header class="top">
-  <a class="top__logo" href="#peel" data-cursor="Top">Ahn HyoJeoung<sup>®</sup></a>
-  <p class="top__role">Product / UXUI Designer</p>
-  <p class="top__clock"><span class="dot"></span>SEOUL <time data-clock>--:--</time> GMT+9</p>
-  <a class="top__cta" href="#contact" data-cursor="Hi!">Let's talk</a>
+  <a class="top__logo" href="#peel" data-cursor="Top"><b>Diagnostic Report</b><span>Ahn HyoJeoung®</span></a>
+  <p class="top__field"><span>Case No.</span><b>2026-AHJ-001</b></p>
+  <p class="top__field"><span>Examiner</span><b>Product / UXUI Designer</b></p>
+  <p class="top__field"><span>Date</span><b><time data-date>2026.10.27</time> · <time data-clock>--:--</time> KST</b></p>
+  <i class="barcode top__barcode" data-barcode="HYOJEOUNG"></i>
+  <a class="top__cta" href="#contact" data-cursor="Hi!">Book a consult</a>
 </header>
 
-<!-- 하단 플로팅 필 — 지금 보고 있는 섹션 이름이 바뀐다 (ref: Büro) -->
+<!-- 하단 차트 내비 — 지금 페이지 이름이 바뀐다 (ref: Büro) -->
 <nav class="pill" aria-label="섹션 이동">
-  <button class="pill__btn" type="button" aria-expanded="false" data-cursor="Menu">
-    <span class="pill__glyph" aria-hidden="true"></span>
-    <span class="pill__label" data-pill-label>Peel the layers</span>
+  <button class="pill__btn" type="button" aria-expanded="false" data-cursor="Index">
+    <span class="pill__page" data-pill-page>P.01</span>
+    <span class="pill__label" data-pill-label>Intake — Symptom</span>
     <span class="pill__bar"><i data-pill-progress></i></span>
     <span class="pill__plus" aria-hidden="true">+</span>
   </button>
   <ul class="pill__menu">
-    <li><a href="#peel"><em>01</em>One layer deeper</a></li>
-    <li><a href="#ways"><em>02</em>4 ways I work</a></li>
-    <li><a href="#proof"><em>03</em>Proof, in seconds</a></li>
-    <li><a href="#work"><em>04</em>Selected work</a></li>
-    <li><a href="#lab"><em>05</em>Lab</a></li>
-    <li><a href="#contact"><em>06</em>Say hi</a></li>
+    <li><a href="#peel"><em>P.01</em>Intake — One layer deeper</a></li>
+    <li><a href="#ways"><em>P.02</em>Protocol — 4 ways I work</a></li>
+    <li><a href="#proof"><em>P.03</em>Vitals — Before / After</a></li>
+    <li><a href="#work"><em>P.04</em>Case files</a></li>
+    <li><a href="#lab"><em>P.05</em>Instruments</a></li>
+    <li><a href="#contact"><em>P.06</em>Referral — Say hi</a></li>
   </ul>
 </nav>
 
-<div class="cursor" aria-hidden="true"><span class="cursor__dot"></span><span class="cursor__ring"><em></em></span></div>
+<!-- 커서 — 십자선 + 좌표 (측정 도구) -->
+<div class="cursor" aria-hidden="true">
+  <span class="cursor__cross"><b data-coord>X 0000 · Y 0000</b></span>
+  <span class="cursor__ring"><em></em></span>
+</div>
 
 <main>
 
-<!-- ============ 1. HERO — 한 장씩 벗겨지는 레이어 (ref: Metalab, animos Deck Peel·Depth Stack, Analogue) ============ -->
-<section class="peel" id="peel" data-label="Peel the layers">
+<!-- ============ P.01 INTAKE — 검사 시트가 한 장씩 벗겨진다 + 엑스레이 렌즈 (ref: Metalab, animos Deck Peel, Analogue) ============ -->
+<section class="peel" id="peel" data-label="Intake — Symptom" data-page="P.01">
   <div class="peel__sticky">
+    <div class="formhead"><span>P.01 / 06 — Intake</span><span>Symptom → Cause</span></div>
+
     <h1 class="peel__title" aria-label="One layer deeper">
       <span class="peel__word" data-w="0">One</span>
-      <span class="peel__word" data-w="1">Layer</span>
-      <span class="peel__word" data-w="2">Deeper</span>
+      <span class="peel__word" data-w="1">Layer<svg class="ann-circle" viewBox="0 0 300 120" preserveAspectRatio="none" aria-hidden="true"><path pathLength="1" d="M150 8 C 260 6, 296 40, 290 66 C 282 104, 180 116, 110 110 C 40 104, 6 84, 10 56 C 14 26, 70 10, 168 12"/></svg></span>
+      <span class="peel__word" data-w="2"><mark class="hl is-on">Deeper</mark></span>
     </h1>
 
-    <p class="peel__lede">화면을 다시 그리기 전에,<br>사용자가 멈춘 지점을 먼저 찾습니다.</p>
-    <p class="peel__meta">EST. 2001 — GACHON UNIV.<br>VISUAL DESIGN ’26</p>
+    <!-- 엑스레이 레이어 — 커서 렌즈 안에서만 보인다 -->
+    <div class="xray" aria-hidden="true">
+      <span class="xray__word" data-w="0">One</span>
+      <span class="xray__word" data-w="1">Layer</span>
+      <span class="xray__word" data-w="2">Deeper</span>
+      <i class="xray__box b1"><em>GNB — 길을 잃는 지점</em></i>
+      <i class="xray__box b2"><em>CTA — 여기서 망설인다</em></i>
+      <i class="xray__box b3"><em>FORM — 입력이 너무 많다</em></i>
+      <i class="xray__box b4"><em>LIST — 끝까지 내려가지 않는다</em></i>
+      <i class="xray__box b5"><em>CARD — 정보 위계가 없다</em></i>
+      <i class="xray__heat h1"></i><i class="xray__heat h2"></i><i class="xray__heat h3"></i>
+      <p class="xray__note n1">← 사용자는 여기서 멈춘다</p>
+      <p class="xray__note n2">CAUSE ≠ SCREEN</p>
+      <p class="xray__note n3">원인은 한 층 아래에 있다 ↓</p>
+    </div>
+    <div class="lens" aria-hidden="true"><span>X-RAY</span></div>
+
+    <dl class="peel__field">
+      <dt>Chief complaint / 주호소</dt>
+      <dd>화면을 다시 그리기 전에,<br>사용자가 <mark class="hl">멈춘 지점</mark>을 먼저 찾습니다.</dd>
+    </dl>
+    <dl class="peel__meta">
+      <div><dt>Subject</dt><dd>Your product</dd></div>
+      <div><dt>Method</dt><dd>Interview · UT · A/B</dd></div>
+      <div><dt>Since</dt><dd>Gachon Univ. Visual Design ’26</dd></div>
+    </dl>
 
     <div class="stack" data-cursor="Scroll">
       <article class="sheet" style="--i:0">
-        <header><span>L01</span><span>SURFACE</span></header>
+        <header><span>SPECIMEN L01</span><span>SYMPTOM</span></header>
         <strong>Screen</strong>
-        <p>보이는 화면</p>
-        <footer>누구나 여기서 시작합니다</footer>
+        <p>보이는 화면 — 증상</p>
+        <footer><span>Finding</span>누구나 여기서 시작합니다</footer>
       </article>
       <article class="sheet" style="--i:1">
-        <header><span>L02</span><span>−1 LAYER</span></header>
+        <header><span>SPECIMEN L02</span><span>OBSERVATION</span></header>
         <strong>Behavior</strong>
         <p>사용자가 멈춘 지점</p>
-        <footer>인터뷰 · UT · 로그</footer>
+        <footer><span>Method</span>인터뷰 · UT · 로그</footer>
       </article>
       <article class="sheet" style="--i:2">
-        <header><span>L03</span><span>−2 LAYERS</span></header>
+        <header><span>SPECIMEN L03</span><span>DIAGNOSIS</span></header>
         <strong>Cause</strong>
         <p>멈추게 만든 원인</p>
-        <footer>문제를 다시 정의합니다</footer>
+        <footer><span>Note</span>문제를 다시 정의합니다</footer>
       </article>
       <article class="sheet" style="--i:3">
-        <header><span>L04</span><span>−3 LAYERS</span></header>
+        <header><span>SPECIMEN L04</span><span>PRESCRIPTION</span></header>
         <strong>Rule</strong>
         <p>반복을 없애는 규칙</p>
-        <footer>시스템으로 바꿉니다</footer>
+        <footer><span>Rx</span>시스템으로 바꿉니다</footer>
       </article>
       <article class="sheet sheet--last" style="--i:4">
-        <header><span>L05</span><span>THE CORE</span></header>
+        <header><span>SPECIMEN L05</span><span>TREATED</span></header>
         <strong>Shipped</strong>
         <p>배포까지 완결된 해답</p>
-        <footer>여기까지 함께 갑니다</footer>
+        <footer><span>Status</span>여기까지 함께 갑니다</footer>
       </article>
     </div>
 
     <div class="depth" aria-hidden="true">
-      <span>DEPTH</span><b data-depth>0.0</b><span>m</span>
+      <span>Layer depth</span><b data-depth>0.0</b>
       <i class="depth__bar"><i data-depth-bar></i></i>
     </div>
-    <p class="peel__hint" aria-hidden="true"><span></span>Scroll to peel</p>
+    <p class="peel__hint" aria-hidden="true"><span></span>Scroll to examine</p>
   </div>
 </section>
 
-<!-- ============ 2. 일하는 방식 4가지 — 번호 챕터 + 형태가 바뀌는 3D 오브젝트 (ref: KODE, Raw Materials, animos, Taxi) ============ -->
-<section class="ways" id="ways" data-label="4 ways I work">
+<!-- ============ P.02 PROTOCOL — 치료 단계 4개 + 형태가 바뀌는 표본 오브젝트 (ref: KODE, Raw Materials, animos, Taxi) ============ -->
+<section class="ways" id="ways" data-label="Protocol — 4 ways I work" data-page="P.02">
   <div class="ways__sticky">
-    <ol class="tabs" aria-label="강점 4가지">
-      <li class="tab" style="--c:var(--pink)"><b>01</b><span>Root cause</span></li>
-      <li class="tab" style="--c:var(--blue)"><b>02</b><span>Systemize</span></li>
-      <li class="tab" style="--c:var(--lime)"><b>03</b><span>Ship it</span></li>
-      <li class="tab" style="--c:var(--ink)"><b>04</b><span>Delegate</span></li>
+    <div class="formhead"><span>P.02 / 06 — Treatment protocol</span><span>Diagnose · Prescribe · Treat · Delegate</span></div>
+    <ol class="tabs" aria-label="일하는 방식 4단계">
+      <li class="tab" style="--c:var(--pink)"><b>01</b><span>Diagnose</span><small>진단</small></li>
+      <li class="tab" style="--c:var(--blue)"><b>02</b><span>Prescribe</span><small>처방</small></li>
+      <li class="tab" style="--c:var(--lime)"><b>03</b><span>Treat</span><small>시술</small></li>
+      <li class="tab" style="--c:var(--ink)"><b>04</b><span>Delegate</span><small>위임</small></li>
     </ol>
 
     <div class="ways__stage">
-      <p class="ways__num"><span data-ways-num>001</span><i>/004</i></p>
+      <div class="obj" aria-hidden="true"><div class="obj__spin" data-obj></div></div>
+      <p class="ways__num"><span class="rx">℞</span><span data-ways-num>001</span><i>/004</i><em data-ways-step>Diagnose</em></p>
       <h2 class="ways__word" aria-live="polite">
         <span class="swap" data-swap>Root cause</span>
         <svg class="scribble" viewBox="0 0 600 60" preserveAspectRatio="none" aria-hidden="true"><path pathLength="1" d="M4 34 C 60 8, 90 56, 150 30 S 240 6, 300 32 S 400 58, 460 28 S 560 10, 596 30"/></svg>
       </h2>
-      <div class="obj" aria-hidden="true"><div class="obj__spin" data-obj></div></div>
     </div>
 
-    <div class="ways__copy">
+    <div class="ways__copy chart">
       <h3 data-ways-kr>원인 설계</h3>
-      <p data-ways-desc>화면을 다시 그리기 전에, 사용자가 멈춘 지점을 먼저 찾습니다.</p>
-      <ul data-ways-keys></ul>
-      <p class="ways__proof"><span>Proof</span><b data-ways-proof></b></p>
+      <div class="chart__row"><span>Finding · 소견</span><p data-ways-desc></p></div>
+      <div class="chart__row"><span>Treatment · 처방</span><ul data-ways-keys></ul></div>
+      <div class="chart__row"><span>Result · 결과</span><p><mark class="hl is-on" data-ways-proof></mark></p></div>
     </div>
   </div>
 </section>
 
-<!-- ============ 3. 숫자로 증명 — 스크롤로 바늘이 돌아가는 다이얼 (ref: shopify.design “26”, Ragged Edge, Büro) ============ -->
-<section class="proof" id="proof" data-label="Proof, in seconds">
+<!-- ============ P.03 VITALS — 모니터 다이얼 + 심전도 + Before/After (ref: shopify.design “26”, Ragged Edge, Büro) ============ -->
+<section class="proof" id="proof" data-label="Vitals — Before / After" data-page="P.03">
   <div class="proof__sticky">
-    <p class="proof__live"><span class="dot"></span>MEASURED</p>
+    <div class="formhead formhead--dark"><span>P.03 / 06 — Vitals monitor</span><span><i class="dot"></i>Measured</span></div>
+    <svg class="ecg" viewBox="0 0 1200 80" preserveAspectRatio="none" aria-hidden="true"><path data-ecg d=""/></svg>
+
     <div class="dial">
       <span class="dial__ghost" data-ghost>120</span>
       <svg class="dial__ticks" viewBox="0 0 400 400" aria-hidden="true"><g data-ticks></g><circle class="dial__arc" cx="200" cy="200" r="186" pathLength="100" data-arc/></svg>
       <div class="dial__needle" data-needle><i></i></div>
       <span class="dial__hub"></span>
+      <span class="dial__label" data-dial-label>SEC / ASSET</span>
     </div>
 
     <div class="proof__panel">
-      <p class="proof__idx" data-proof-idx>01 / 03</p>
+      <p class="proof__idx"><span data-proof-idx>TEST 01 / 03</span><span data-proof-unit>Lead time</span></p>
       <p class="proof__what" data-proof-what>반복 에셋 제작 리드타임<br>1종당</p>
       <p class="proof__value"><b data-proof-value>2:00</b></p>
-      <p class="proof__delta"><b data-proof-delta>−0%</b><span data-proof-from>2분 → 40초</span></p>
-      <p class="proof__src" data-proof-src>NHN DATA · 에이스카운터 — 규칙 기반 에셋 라이브러리</p>
+      <div class="ba">
+        <div class="ba__row"><span>Before</span><i class="ba__bar"><i data-ba-before></i></i><b data-ba-before-v>2:00</b></div>
+        <div class="ba__row ba__row--after"><span>After</span><i class="ba__bar"><i data-ba-after></i></i><b data-ba-after-v>2:00</b></div>
+      </div>
+      <p class="proof__delta"><b data-proof-delta>−0%</b><span data-proof-src>NHN DATA · 에이스카운터 — 규칙 기반 에셋 라이브러리</span></p>
     </div>
   </div>
 </section>
 
-<!-- ============ 4. 작업 — 부채꼴 카드 + 눈금 티커 (ref: Nite Riot, Taxi Studio, Locomotive) ============ -->
-<section class="work" id="work" data-label="Selected work">
+<!-- ============ P.04 CASE FILES — 부채꼴 케이스 차트 + 줄자 티커 (ref: Nite Riot, Taxi Studio, Locomotive) ============ -->
+<section class="work" id="work" data-label="Case files" data-page="P.04">
   <div class="work__sticky">
-    <p class="work__side work__side--l">원인을 찾고,<br><b>끝까지 만든다.</b></p>
-    <p class="work__side work__side--r">Selected work<br><b data-work-count>01 — 08</b></p>
+    <div class="formhead"><span>P.04 / 06 — Case files</span><span data-work-count>Case 01 — 08</span></div>
+    <p class="work__side work__side--l">원인을 찾고,<br><mark class="hl">끝까지 만든다.</mark></p>
     <div class="fan" data-fan data-cursor="Soon"></div>
     <dl class="work__info">
-      <div><dt>Impact</dt><dd data-work-impact></dd></div>
+      <div><dt>Outcome</dt><dd data-work-impact></dd></div>
       <div><dt>Role</dt><dd data-work-role></dd></div>
       <div><dt>Year</dt><dd data-work-year></dd></div>
     </dl>
@@ -172,43 +213,58 @@
   </div>
 </section>
 
-<!-- ============ 5. LAB — 드래그로 돌리는 카드 구 (ref: animos Card Globe / Sphere Wall) ============ -->
-<section class="lab" id="lab" data-label="Lab">
+<!-- ============ P.05 INSTRUMENTS — 드래그로 돌리는 도구 라벨 구 (ref: animos Card Globe / Sphere Wall) ============ -->
+<section class="lab" id="lab" data-label="Instruments" data-page="P.05">
+  <div class="formhead"><span>P.05 / 06 — Instruments</span><span>Tool · Method · AI · Output</span></div>
   <div class="lab__head">
-    <p class="eyebrow">05 — Lab</p>
-    <h2>판단은 디자이너,<br><em>실행은 AI.</em></h2>
-    <p>Figma에서 끝내지 않고, 코드와 AI로 직접 굴려봅니다.<br>구를 잡고 돌려보세요.</p>
+    <h2>판단은 디자이너,<br><mark class="hl">실행은 AI.</mark></h2>
+    <p>Figma에서 끝내지 않고, 코드와 AI로 직접 굴려봅니다.<br>구를 잡고 돌려 진찰 도구를 골라보세요.</p>
+    <ul class="lab__legend"><li><i></i>Tool / Method</li><li><i class="is-ai"></i>AI</li><li><i class="is-pick"></i>Selected</li></ul>
   </div>
   <div class="globe" data-globe data-cursor="Drag"><div class="globe__spin" data-globe-spin></div></div>
-  <p class="lab__readout" aria-live="polite"><span>Selected</span><b data-globe-pick>Figma</b></p>
+  <p class="lab__readout" aria-live="polite"><span>Selected instrument</span><b data-globe-pick>Figma</b></p>
 </section>
 
-<!-- ============ 6. CONTACT — 문장 조합 + 커서를 보는 눈 + 거대 워드마크 (ref: Pentagram, Cloudstudio, Unseen, Mother, MW.S) ============ -->
-<section class="contact" id="contact" data-label="Say hi">
-  <p class="eyebrow">06 — Say hi</p>
-  <p class="madlib">Let’s go
-    <button type="button" class="madlib__opt" data-opts="one layer deeper|after the root cause|build the system|ship it for real" data-cursor="Swap">one layer deeper</button>
-    on
-    <button type="button" class="madlib__opt" data-opts="your product|a stuck funnel|a messy workflow|an AI pipeline" data-cursor="Swap">your product</button>
-    together.
-  </p>
+<!-- ============ P.06 REFERRAL — 협진 의뢰서 + 시력검사표 워드마크 (ref: Pentagram, Cloudstudio, Unseen, Mother) ============ -->
+<section class="contact" id="contact" data-label="Referral — Say hi" data-page="P.06">
+  <div class="formhead"><span>P.06 / 06 — Referral form</span><span>No. 0001</span></div>
 
-  <div class="contact__row">
-    <div class="eyes" aria-hidden="true"><span class="eye"><i></i></span><span class="eye"><i></i></span></div>
-    <p class="contact__kr">커피챗은 언제나 환영입니다!</p>
-    <div class="contact__links">
-      <button type="button" class="chip chip--solid" data-copy="gywjdbusiness9630@gmail.com" data-cursor="Copy">gywjdbusiness9630@gmail.com</button>
-      <a class="chip" href="../assets/Portfolio/안효정_2026_Portfolio.pdf" target="_blank" rel="noopener" data-cursor="PDF">Portfolio ↗</a>
-      <a class="chip" href="../assets/Portfolio/안효정_2026_이력서.pdf" target="_blank" rel="noopener" data-cursor="PDF">Resume ↗</a>
-      <a class="chip" href="https://www.linkedin.com/in/%ED%9A%A8%EC%A0%95-%EC%95%88-ba8a4b325" target="_blank" rel="noopener" data-cursor="In">LinkedIn ↗</a>
+  <div class="referral">
+    <p class="referral__tag">Referral · 협진 의뢰</p>
+    <p class="madlib">Let’s go
+      <button type="button" class="madlib__opt" data-opts="one layer deeper|after the root cause|build the system|ship it for real" data-cursor="Swap">one layer deeper</button>
+      on
+      <button type="button" class="madlib__opt" data-opts="your product|a stuck funnel|a messy workflow|an AI pipeline" data-cursor="Swap">your product</button>
+      together.
+    </p>
+    <span class="stamp stamp--open" aria-hidden="true">Open for<br>consultation</span>
+
+    <div class="contact__row">
+      <div class="eyes" aria-hidden="true"><span class="eye"><i></i></span><span class="eye"><i></i></span></div>
+      <p class="contact__kr">커피챗은 언제나 환영입니다!</p>
+      <div class="contact__links">
+        <button type="button" class="chip chip--solid" data-copy="gywjdbusiness9630@gmail.com" data-cursor="Copy">gywjdbusiness9630@gmail.com</button>
+        <a class="chip" href="../assets/Portfolio/안효정_2026_Portfolio.pdf" target="_blank" rel="noopener" data-cursor="PDF">Portfolio ↗</a>
+        <a class="chip" href="../assets/Portfolio/안효정_2026_이력서.pdf" target="_blank" rel="noopener" data-cursor="PDF">Resume ↗</a>
+        <a class="chip" href="https://www.linkedin.com/in/%ED%9A%A8%EC%A0%95-%EC%95%88-ba8a4b325" target="_blank" rel="noopener" data-cursor="In">LinkedIn ↗</a>
+      </div>
     </div>
+    <p class="referral__sign"><span>Examiner signature</span><b>Ahn HyoJeoung</b></p>
   </div>
 
-  <p class="wordmark" aria-label="Ahn HyoJeoung" data-wordmark>Ahn HyoJeoung</p>
+  <!-- 시력검사표 — 줄마다 작아진다 -->
+  <div class="snellen" aria-label="Ahn HyoJeoung — Product / UXUI Designer">
+    <p class="snellen__row" data-snellen style="--fs:1"><span>20/200</span><b data-stretch>AHN</b><span>1</span></p>
+    <p class="snellen__row" data-snellen style="--fs:.46"><span>20/100</span><b data-stretch>HYOJEOUNG</b><span>2</span></p>
+    <p class="snellen__row" data-snellen style="--fs:.17"><span>20/50</span><b>PRODUCT · UXUI DESIGNER</b><span>3</span></p>
+    <p class="snellen__row" data-snellen style="--fs:.085"><span>20/20</span><b>ONE LAYER DEEPER — SEOUL, KOREA</b><span>4</span></p>
+    <p class="snellen__row" data-snellen style="--fs:.04"><span>20/10</span><b>IF YOU CAN READ THIS LINE, LET’S TALK.</b><span>5</span></p>
+  </div>
+
   <footer class="foot">
     <span>© 2026 Ahn HyoJeoung</span>
-    <span>Designed one layer deeper — built with code &amp; AI</span>
-    <span>SEOUL <time data-clock>--:--</time></span>
+    <span>Report generated with code &amp; AI</span>
+    <span>SEOUL <time data-clock>--:--</time> KST</span>
   </footer>
 </section>
 

@@ -50,3 +50,34 @@
 2. Work 카드 클릭 → 상세 페이지 연결 (지금은 커서에 “Soon”)
 3. 진행중 프로젝트(PYDERIN · K-Derma · SUPERWORK) 공개 범위 확인 후 문구 확정
 4. 확정되면 `v2/` 를 루트로 올리고 main 에 병합 → GitHub Pages 반영
+
+---
+
+## 후속 작업 (같은 날) — 컨셉 적용 : DIAGNOSTIC REPORT
+
+사용자가 컨셉 5안(발굴 현장 / 진단 리포트 / 조판 공방 / 블라인드 하우스 / 대화하는 UI) 중 **2번 진단 리포트**를 선택. 구조·인터랙션은 그대로 두고 비주얼 언어를 전면 교체.
+
+### 비주얼 시스템
+- 바탕 : 모눈 차트지 (24px 보조선 + 120px 주선, 블루 계열)
+- 색의 역할 : 핑크 = 형광펜 마커, 블루 = 차트 펜(주석·동그라미), 라임 = 두 번째 형광펜, 필름 네이비 = 엑스레이
+- 장치 : 리포트 헤더(Case No · Examiner · Date · 바코드), 섹션마다 `P.0X / 06` 서식 머리줄, 바코드(문자열로 생성), 도장, 체크박스 ☑, 십자선 커서 + 좌표
+
+### 섹션별 변환
+| 섹션 | 이전 | 진단 리포트 버전 |
+|---|---|---|
+| 프리로더 | 줄무늬 블라인드 | 스캔 라인이 내려가며 “SCANNING PRODUCT 000%” → 리포트가 위로 걷힘 |
+| P.01 Intake | 레이어 카드 | 검사 시트 SPECIMEN L01~05 (Symptom → Observation → Diagnosis → Prescription → Treated), “Layer” 블루 펜 동그라미, “Deeper” 형광펜. **엑스레이 렌즈** : 커서 주변 원 안에서만 속 레이어(와이어프레임 박스 + “CTA — 여기서 망설인다” 같은 진단 주석 + 히트맵)가 보임 |
+| P.02 Protocol | 강점 4챕터 | 치료 프로토콜 ℞ Diagnose · Prescribe · Treat · Delegate, 폴더 탭, 표본 슬라이드 타일, 우측 차트(소견 / 처방 / 결과) |
+| P.03 Vitals | 다이얼 | 바이탈 모니터 — 상단 심전도(ECG) 라인이 흐름, 다이얼 + Before/After 막대 |
+| P.04 Case files | 부채꼴 카드 | 케이스 차트(폴더 탭 · Symptom · Rx) + RESOLVED / IN TREATMENT 도장이 찍히는 애니메이션, 줄자 티커 |
+| P.05 Instruments | 카드 구 | 바코드 라벨 타일 구 + 범례 |
+| P.06 Referral | 문장 · 워드마크 | 협진 의뢰서 양식 + OPEN FOR CONSULTATION 도장 + 서명란, **시력검사표(Snellen) 워드마크** — 줄마다 작아지고 마지막 줄 “IF YOU CAN READ THIS LINE, LET’S TALK.” |
+
+### 검수 발견사항
+| 심각도 | 위치 | 내용 | 상태 |
+|---|---|---|---|
+| med | `v2/v2.css` `.snellen__row span` | 글자 분할 span 까지 라벨 스타일이 먹어 AHN·HYOJEOUNG 이 11px 로 렌더 → `>` 자식 선택자로 한정 | 적용 |
+| med | `v2/index.html` 헤더 Date | flex 컬럼이라 날짜·시간이 줄바꿈 → 값을 `<b>` 로 묶음 | 적용 |
+| low | `v2/v2.css` `.depth` | DEPTH 미터가 “Layer” 동그라미와 겹침 → 좌측 가로 미터로 이동 | 적용 |
+| low | 케이스 5~8 Symptom 문구 | 레포 정보로 추정해 쓴 문구 (PYDERIN · K-Derma · SUPERWORK · KOREAHNB) | 사용자 확인 필요 |
+| low | 엑스레이 주석 | “CTA — 여기서 망설인다” 등은 컨셉 연출용 예시 문구 (실측 데이터 아님) | 의도됨 |
